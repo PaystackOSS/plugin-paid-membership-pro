@@ -1,21 +1,20 @@
 <?php
 /**
- * Plugin Name: Paystack - Paid Memberships Pro
+ * Plugin Name: Paystack gateway - Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
  * Version: 1.0
- * Author: Dat Pham
+ * Author: Kendysond
  * License: GPLv2 or later
  */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
-if (!function_exists('paystack_pmp_gateway_load')) {
-	// gateway load
-	add_action( 'plugins_loaded', 'paystack_pmp_gateway_load', 20);
+if (!function_exists('KKD_paystack_pmp_gateway_load')) {
+	add_action( 'plugins_loaded', 'KKD_paystack_pmp_gateway_load', 20);
 
-	DEFINE('PAYSTACKPMP', "paystack-paidmembershipspro");
+	DEFINE('KKD_PAYSTACKPMP', "paystack-paidmembershipspro");
 
-	function paystack_pmp_gateway_load() {
+	function KKD_paystack_pmp_gateway_load() {
 		// paid memberships pro required
 		if (!class_exists('PMProGateway')) {
 			return;
@@ -40,21 +39,6 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 				{
 					$this->gateway = $gateway;
 					$this->gateway_environment =  pmpro_getOption("gateway_environment");
-
-					if(!class_exists("PaystackConfig")) {
-						require_once(dirname(__FILE__) . "/inc/class.paystack-config.php");
-					}
-
-					//set API connection vars
-					PaystackConfig::setAPIUsername(pmpro_getOption("paystack_apiusername"));
-					PaystackConfig::setAPIPassword(pmpro_getOption("paystack_apipassword"));
-					PaystackConfig::setWalletID(pmpro_getOption("paystack_walletid"));
-					PaystackConfig::setDirectkitURL(pmpro_getOption("paystack_directkiturl"));
-					PaystackConfig::setWebkitURL(pmpro_getOption("paystack_webkiturl"));
-					PaystackConfig::setDirectkitURLTest(pmpro_getOption("paystack_directkiturltest"));
-					PaystackConfig::setWebkitURLTest(pmpro_getOption("paystack_webkiturltest"));
-					PaystackConfig::setEnv(pmpro_getOption("gateway_environment"));
-					PaystackConfig::setCSSURL(pmpro_getOption("paystack_cssurl"));
 
 					return $this->gateway;
 				}	
@@ -97,7 +81,7 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 					}
 
 					if ($file == $this_plugin) {
-						$settings_link = '<a href="'.admin_url('admin.php?page=pmpro-paymentsettings').'">'.__('Settings', PAYSTACKPMP).'</a>';
+						$settings_link = '<a href="'.admin_url('admin.php?page=pmpro-paymentsettings').'">'.__('Settings', KKD_PAYSTACKPMP).'</a>';
 						array_unshift($links, $settings_link);
 					}
 
@@ -123,7 +107,7 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 				 */
 				static function pmpro_gateways($gateways) {
 					if(empty($gateways['paystack'])) {
-						$gateways = array_slice($gateways, 0, 1) + array("paystack" => __('Paystack', PAYSTACKPMP)) + array_slice($gateways, 1);
+						$gateways = array_slice($gateways, 0, 1) + array("paystack" => __('Paystack', KKD_PAYSTACKPMP)) + array_slice($gateways, 1);
 					}
 					return $gateways;
 				}
@@ -270,7 +254,6 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 				function sendToPaystack(&$order) {
 					global $wp;
 
-					$kit = new PaystackKit();
 					
 					$params = array();
 					$amount = $order->PaymentAmount;
@@ -278,18 +261,6 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 					$amount = round((float)$amount + (float)$amount_tax, 2);			
 			
 					//call directkit to get Webkit Token
-					$params = array('wkToken'=>$order->code,
-						'wallet'=> PaystackConfig::getWalletID(),
-						'amountTot'=>number_format(floatval($order->InitialPayment), 2, '.', ''),
-						'amountCom'=>number_format(floatval($order->InitialPayment), 2, '.', ''),	// because money is transfered in merchant wallet
-						'comment'=>'Paid Memberships Pro for '.$_SERVER["HTTP_HOST"]. ": Order N° " . $order->id,
-						'returnUrl'=>urlencode(pmpro_url("confirmation", "?level=" . $order->membership_level->id)),
-						'cancelUrl'=>urlencode(pmpro_url("checkout", "?level=" . $order->membership_level->id)),
-						'errorUrl'=>urlencode(pmpro_url("checkout", "?level=" . $order->membership_level->id . "&error")),
-						'autoCommission'=>0,
-						'registerCard'=>0, //For Atos //@TODO get value from payment form
-						'useRegisteredCard'=>0, //For payline //@TODO get value from payment form
-					);
 					$amount = floatval($order->InitialPayment);			
 
 					// echo pmpro_url("confirmation", "?level=" . $order->membership_level->id);
@@ -381,8 +352,7 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 						
 					if (!empty($pmpro_invoice) && $pmpro_invoice->gateway == "paystack" && isset($pmpro_invoice->total) && $pmpro_invoice->total > 0)
 					{
-						$morder = $pmpro_invoice;
-							// echo $morder->code.' - '.$_REQUEST['trxref'];
+							$morder = $pmpro_invoice;
 							if ($morder->code == $_REQUEST['trxref']) {
 								$mode = pmpro_getOption("gateway_environment");
 								if ($mode == 'sandbox') {
@@ -403,6 +373,7 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 								if( ! is_wp_error( $request ) && 200 == wp_remote_retrieve_response_code( $request ) ) {
 									$paystack_response = json_decode( wp_remote_retrieve_body( $request ) );
 									if ( 'success' == $paystack_response->data->status ) {
+
 										
 									  	$pmpro_level = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_membership_levels WHERE id = '" . (int)$morder->membership_id . "' LIMIT 1");
 										$pmpro_level = apply_filters("pmpro_checkout_level", $pmpro_level);
@@ -462,10 +433,10 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 										// echo "<pre>";
 										// print_r($pmpro_level);
 										$content = "<ul>
-											<li><strong>".__('Account', PAYSTACKPMP).":</strong> ".$current_user->display_name." (".$current_user->user_email.")</li>
-											<li><strong>".__('Order', PAYSTACKPMP).":</strong> ".$pmpro_invoice->code."</li>
-											<li><strong>".__('Membership Level', PAYSTACKPMP).":</strong> ".$pmpro_level->name."</li>
-											<li><strong>".__('Amount Paid', PAYSTACKPMP).":</strong> ".$pmpro_invoice->total." ".$pmpro_currency."</li>
+											<li><strong>".__('Account', KKD_PAYSTACKPMP).":</strong> ".$current_user->display_name." (".$current_user->user_email.")</li>
+											<li><strong>".__('Order', KKD_PAYSTACKPMP).":</strong> ".$pmpro_invoice->code."</li>
+											<li><strong>".__('Membership Level', KKD_PAYSTACKPMP).":</strong> ".$pmpro_level->name."</li>
+											<li><strong>".__('Amount Paid', KKD_PAYSTACKPMP).":</strong> ".$pmpro_invoice->total." ".$pmpro_currency."</li>
 										  </ul>";
 										ob_start();
 										if(file_exists(get_stylesheet_directory() . "/paid-memberships-pro/pages/confirmation.php")) {
@@ -495,7 +466,6 @@ if (!function_exists('paystack_pmp_gateway_load')) {
 					return $content;
 					
 				}
-
 				function delete(&$order) {
 					//no matter what happens below, we're going to cancel the order in our system
 					$order->updateStatus("cancelled");
