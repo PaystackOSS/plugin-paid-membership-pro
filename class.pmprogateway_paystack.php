@@ -155,6 +155,15 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					</tr>
 					<tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
 						<th scope="row" valign="top">
+							<label><?php _e('Webhook', 'pmpro');?>:</label>
+						</th>
+						<td>
+							<p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL', 'pmpro');?> <pre><?php echo admin_url("admin-ajax.php") . "?action=pmpro-paystack";?></pre></p>
+							
+						</td>
+					</tr>		
+					<tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
+						<th scope="row" valign="top">
 							<label for="paystack_tsk"><?php _e('Test Secret Key', 'pmpro');?>:</label>
 						</th>
 						<td>
