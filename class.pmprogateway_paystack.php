@@ -8,7 +8,6 @@
  * License: GPLv2 or later
  */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
-
 if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 	add_action( 'plugins_loaded', 'KKD_paystack_pmp_gateway_load', 20);
 
@@ -53,7 +52,9 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					//add fields to payment settings
 					add_filter('pmpro_payment_options', array('PMProGateway_paystack', 'pmpro_payment_options'));
 					add_filter('pmpro_payment_option_fields', array('PMProGateway_paystack', 'pmpro_payment_option_fields'), 10, 2);
-
+					add_action( 'wp_ajax_kkd_pmpro_paystack_ipn', array('PMProGateway_paystack', 'kkd_pmpro_paystack_ipn'));
+					add_action( 'wp_ajax_nopriv_kkd_pmpro_paystack_ipn', array('PMProGateway_paystack', 'kkd_pmpro_paystack_ipn'));
+					
 					//code to add at checkout
 					$gateway = pmpro_getGateway();
 					if($gateway == "paystack")
@@ -65,7 +66,7 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 						add_filter('pmpro_gateways_with_pending_status', array('PMProGateway_paystack', 'pmpro_gateways_with_pending_status'));
 						add_filter('pmpro_pages_shortcode_checkout', array('PMProGateway_paystack', 'pmpro_pages_shortcode_checkout'), 20, 1);
 						add_filter('pmpro_checkout_default_submit_button', array('PMProGateway_paystack', 'pmpro_checkout_default_submit_button'));
-				// custom confirmation page
+						// custom confirmation page
 						add_filter('pmpro_pages_shortcode_confirmation', array('PMProGateway_paystack', 'pmpro_pages_shortcode_confirmation'), 20, 1);
 					}
 				}
@@ -111,7 +112,47 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					}
 					return $gateways;
 				}
-
+				function kkd_pmpro_paystack_ipn() {
+						// if ((strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' ) || !array_key_exists('HTTP_X_PAYSTACK_SIGNATURE', $_SERVER) ) {
+						//     // only a post with paystack signature header gets our attention
+						//     exit();
+						// }
+						define( 'SHORTINIT', true );
+						// Retrieve the request's body and parse it as JSON
+						$input = @file_get_contents("php://input");
+						$event = json_decode($input);
+						// if(!$_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] || ($_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] !== hash_hmac('sha512', $input, paystack_recurrent_billing_get_secret_key()))){
+						//   exit();
+						// }
+						switch($event->event){
+						    // subscription.create should update the record for the subscriber's email 
+						    // with the subscriptioncode
+						    case 'subscription.create':
+						        paystack_recurrent_billing_update_subscription_code($event);
+						        break;
+						    // subscription.disable should alert them of what happened and 
+						    // send the outstanding balance
+						    case 'subscription.disable':
+						        paystack_recurrent_billing_check_debt_and_notify($event);
+						        break;
+					       case 'charge.success':
+						       $morder =  new MemberOrder($event->data->reference);
+								$morder->getMembershipLevel();
+								$morder->getUser();
+								$morder->Gateway->pmpro_pages_shortcode_confirmation('',$event->data->reference);
+								
+						        break;
+						    // invoice.create and invoice.update should update the record for the subscriber's email 
+						    // and subscriptioncode with the new payment received if paid is true
+						    case 'invoice.create':
+						    case 'invoice.update':
+						        $event->data->paid && paystack_recurrent_billing_add_invoice_payment($event);
+						        break;
+						}
+						// Do something with $event
+						http_response_code(200);
+						exit();
+					}
 				/**
 				 * Get a list of payment options that the Paystack gateway needs/supports.
 				 */
@@ -158,7 +199,7 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 							<label><?php _e('Webhook', 'pmpro');?>:</label>
 						</th>
 						<td>
-							<p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL', 'pmpro');?> <pre><?php echo admin_url("admin-ajax.php") . "?action=pmpro-paystack";?></pre></p>
+							<p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL', 'pmpro');?> <pre><?php echo admin_url("admin-ajax.php") . "?action=kkd_pmpro_paystack_ipn";?></pre></p>
 							
 						</td>
 					</tr>		
@@ -346,16 +387,20 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 				/**
 				 * Custom confirmation page
 				 */
-				static function pmpro_pages_shortcode_confirmation($content) {
+				static function pmpro_pages_shortcode_confirmation($content,$reference = null) {
 					global $wpdb, $current_user, $pmpro_invoice, $pmpro_currency,$gateway;
 					if (!isset($_REQUEST['trxref'])) {
 						$_REQUEST['trxref'] = null;
 					}
+					if ($reference != null) {
+						$_REQUEST['trxref'] = $reference;
+					}
 					
 					if (empty($pmpro_invoice))
-					{
-						$morder = new MemberOrder();
-						$morder->getLastMemberOrder(get_current_user_id(), apply_filters("pmpro_confirmation_order_status", array("pending", "success")));
+					{	
+						$morder =  new MemberOrder($_REQUEST['trxref']);
+						// $morder = new MemberOrder();
+						// $morder->getLastMemberOrder(get_current_user_id(), apply_filters("pmpro_confirmation_order_status", array("pending", "success")));
 						if (!empty($morder) && $morder->gateway == "paystack") $pmpro_invoice = $morder;
 					}
 						
