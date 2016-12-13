@@ -124,6 +124,7 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 						}
 						switch($event->event){
 						    case 'subscription.create':
+
 						        break;
 						    case 'subscription.disable':
 						        break;
@@ -395,6 +396,10 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					{
 							$morder = $pmpro_invoice;
 							if ($morder->code == $_REQUEST['trxref']) {
+								$pmpro_level = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_membership_levels WHERE id = '" . (int)$morder->membership_id . "' LIMIT 1");
+								$pmpro_level = apply_filters("pmpro_checkout_level", $pmpro_level);
+								$startdate = apply_filters("pmpro_checkout_start_date", "'" . current_time("mysql") . "'", $morder->user_id, $pmpro_level);
+										
 								$mode = pmpro_getOption("gateway_environment");
 								if ($mode == 'sandbox') {
 									$key = pmpro_getOption("paystack_tsk");
@@ -413,22 +418,98 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 								$request = wp_remote_get( $paystack_url, $args );
 								if( ! is_wp_error( $request ) && 200 == wp_remote_retrieve_response_code( $request ) ) {
 									$paystack_response = json_decode( wp_remote_retrieve_body( $request ) );
-									if ( 'success' == $paystack_response->data->status ) {
-
+									if ( 'success' == $paystack_response->data->status && $pmpro_level->initial_payment ==  ($paystack_response->data->amount/100)) {
+										$customer_code = $paystack_response->data->customer->customer_code;
 										
-									  	$pmpro_level = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_membership_levels WHERE id = '" . (int)$morder->membership_id . "' LIMIT 1");
-										$pmpro_level = apply_filters("pmpro_checkout_level", $pmpro_level);
-										$startdate = apply_filters("pmpro_checkout_start_date", "'" . current_time("mysql") . "'", $morder->user_id, $pmpro_level);
-										$startdate = apply_filters("pmpro_checkout_start_date", "'" . current_time("mysql") . "'", $user_id, $pmpro_level);
-										if (strlen($order->subscription_transaction_id) > 3) 
-										{
+										if (strlen($order->subscription_transaction_id) > 3) {
 											$enddate = "'" . date("Y-m-d", strtotime("+ " . $order->subscription_transaction_id, current_time("timestamp"))) . "'";
-										}
-										elseif (!empty($pmpro_level->expiration_number)) {
+										}elseif (!empty($pmpro_level->expiration_number)) {
 											$enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
 										} else {
 											$enddate = "NULL";
 										}
+										if (($pmpro_level->cycle_number > 0) && ($pmpro_level->billing_amount > 0) && ($pmpro_level->cycle_period != "")) {
+											if ($pmpro_level->cycle_number < 10 && $pmpro_level->cycle_period == 'Day') {
+												$interval = 'weekly';
+											}elseif(($pmpro_level->cycle_number > 10) && ($pmpro_level->cycle_period == 'Day')){
+												$interval = 'monthly';
+
+											}elseif(($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Month')){
+												$interval = 'monthly';
+
+											}elseif(($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Year')){
+												$interval = 'annually';
+
+											}
+											$amount = $pmpro_level->billing_amount;
+											$koboamount = $amount*100;
+											//Create Plan
+											$paystack_url = 'https://api.paystack.co/plan';
+											$subscription_url = 'https://api.paystack.co/subscription';
+											$check_url = 'https://api.paystack.co/plan?amount='.$koboamount.'&interval='.$interval;
+											$headers = array(
+												'Content-Type'	=> 'application/json',
+												'Authorization' => 'Bearer ' . $key
+											);
+
+											$checkargs = array(
+												'headers'	=> $headers,
+												'timeout'	=> 60
+											);
+											// Check if plan exist
+											$checkrequest = wp_remote_get( $check_url, $checkargs );
+											if(!is_wp_error($checkrequest)) {
+												$response = json_decode(wp_remote_retrieve_body($checkrequest));
+												if ($response->meta->total >= 1) {
+													$plan = $response->data[0];
+													$plancode = $plan->plan_code;
+													
+												}else{
+													//Create Plan
+													$body = array(
+														'name'	=> '('.number_format($amount).') - '.$interval.' - ['.$pmpro_level->cycle_number.' - '.$pmpro_level->cycle_period.']' ,
+														'amount' => $koboamount,
+														'interval'		=> $interval
+													);
+													$args = array(
+														'body'		=> json_encode( $body ),
+														'headers'	=> $headers,
+														'timeout'	=> 60
+													);
+
+													$request = wp_remote_post( $paystack_url, $args );
+													if( ! is_wp_error( $request )) {
+														$paystack_response = json_decode(wp_remote_retrieve_body($request));
+														$plancode	= $paystack_response->data->plan_code;
+													}
+												}
+
+											}
+											$body = array(
+												'customer' => $customer_code,
+												'plan'		=> $plancode
+											);
+											$args = array(
+												'body'		=> json_encode($body),
+												'headers'	=> $headers,
+												'timeout'	=> 60
+											);
+
+											$request = wp_remote_post($subscription_url, $args);
+											if( ! is_wp_error( $request )) {
+												$paystack_response = json_decode(wp_remote_retrieve_body($request));
+												$subscription_code	= $paystack_response->data->subscription_code;
+												$token	= $paystack_response->data->email_token;
+												$morder->subscription_transaction_id = $subscription_code;
+												$morder->subscription_token = $token;
+				
+												
+											}
+											
+										}
+										// 
+										// die();
+										
 										$custom_level = array(
 												'user_id' 			=> $morder->user_id,
 												'membership_id' 	=> $pmpro_level->id,
@@ -442,14 +523,19 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 												'trial_limit' 		=> $pmpro_level->trial_limit,
 												'startdate' 		=> $startdate,
 												'enddate' 			=> $enddate);
-
-										if (pmpro_changeMembershipLevel($custom_level, $morder->user_id, 'changed')){
-											$morder->status = "success";
-											$morder->membership_id = $pmpro_level->id;
-											$morder->payment_transaction_id	= $_REQUEST['trxref'];
-											$morder->saveOrder();
+										if ($morder->status != 'success') {
+											
+											if (pmpro_changeMembershipLevel($custom_level, $morder->user_id, 'changed')){
+												$morder->membership_id = $pmpro_level->id;
+												$morder->payment_transaction_id	= $_REQUEST['trxref'];
+												$morder->status = "success";
+												$morder->saveOrder();
+											}
+												
 										}
-
+										// echo "<pre>";
+										// print_r($morder);
+										// die();
 										//setup some values for the emails
 										if (!empty($morder)) {
 											$pmpro_invoice = new MemberOrder($morder->id);
@@ -465,12 +551,12 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 										}
 										
 										//send email to member
-										// $pmproemail = new PMProEmail();
-										// $pmproemail->sendCheckoutEmail($current_user, $invoice);
+										$pmproemail = new PMProEmail();
+										$pmproemail->sendCheckoutEmail($current_user, $invoice);
 
-										// //send email to admin
-										// $pmproemail = new PMProEmail();
-										// $pmproemail->sendCheckoutAdminEmail($current_user, $invoice);
+										//send email to admin
+										$pmproemail = new PMProEmail();
+										$pmproemail->sendCheckoutAdminEmail($current_user, $invoice);
 										// echo "<pre>";
 										// print_r($pmpro_level);
 										$content = "<ul>
