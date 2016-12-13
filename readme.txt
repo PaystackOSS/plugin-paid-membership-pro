@@ -1,4 +1,4 @@
-=== Paystack Gateway for Wordpress Paid Membership pro ===
+=== Paystack Gateway for Paid Membership pro ===
 Contributors: kendysond
 Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target,Naira,payments,verve
@@ -34,12 +34,12 @@ You can also follow us on Twitter! **[@paystack](http://twitter.com/paystack)**
 = Automatic Installation =
 *    Login to your WordPress Admin area
 *    Go to "Plugins > Add New" from the left hand menu
-*    In the search box type __Paystack on Wordpress Paid Membership pro__
-*    From the search result you will see __Paystack on Wordpress Paid Membership pro__ click on __Install Now__ to install the plugin
+*    In the search box type __Paystack on Paid Membership pro__
+*    From the search result you will see __Paystack on Paid Membership pro__ click on __Install Now__ to install the plugin
 *    A popup window will ask you to confirm your wish to install the Plugin.
 *    After installation, activate the plugin.
-*    Open the settings page for  Paystack on Wordpress Paid Membership pro Paystack Settings
-*    Configure your __Paystack on Wordpress Paid Membership pro__ api key settings as instructed on the page.
+*    Open the settings page for  Paystack on Paid Membership pro Paystack Settings
+*    Configure your __Paystack on Paid Membership pro__ api key settings as instructed on the page.
 
 = Manual Installation =
 1.  Download the plugin zip file
