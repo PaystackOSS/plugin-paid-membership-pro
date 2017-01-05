@@ -54,7 +54,6 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					add_filter('pmpro_payment_option_fields', array('PMProGateway_paystack', 'pmpro_payment_option_fields'), 10, 2);
 					add_action( 'wp_ajax_kkd_pmpro_paystack_ipn', array('PMProGateway_paystack', 'kkd_pmpro_paystack_ipn'));
 					add_action( 'wp_ajax_nopriv_kkd_pmpro_paystack_ipn', array('PMProGateway_paystack', 'kkd_pmpro_paystack_ipn'));
-					// add_action( 'pmpro_after_change_membership_level', array('PMProGateway_paystack','kkd_pmpro_after_change_membership_level'), 10, 3 );
 					//code to add at checkout
 					$gateway = pmpro_getGateway();
 					if($gateway == "paystack")
@@ -149,11 +148,6 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 						exit();
 					}
 
-				static function kkd_pmpro_paystack_disable_subscription($code) {
-					global $wpdb;
-				
-					
-				}
 				/**
 				 * Get a list of payment options that the Paystack gateway needs/supports.
 				 */
@@ -280,28 +274,6 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 				 * Instead of change membership levels, send users to Paystack payment page.
 				 */
 				static function pmpro_checkout_before_change_membership_level($user_id, $morder)
-				{
-					global $wpdb, $discount_code_id;
-					
-					//if no order, no need to pay
-					if(empty($morder)) {
-						return;
-					}
-					if(empty($morder->code))
-						$morder->code = $morder->getRandomCode();	
-						
-					$morder->payment_type = "paystack";
-					$morder->status = "pending";
-					$morder->user_id = $user_id;
-					$morder->saveOrder();
-
-					//save discount code use
-					if(!empty($discount_code_id))
-						$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . $discount_code_id . "', '" . $user_id . "', '" . $morder->id . "', now())");
-
-					$morder->Gateway->sendToPaystack($morder);
-				}
-				static function pmpro_checkout_after_change_membership_level($user_id, $morder)
 				{
 					global $wpdb, $discount_code_id;
 					
