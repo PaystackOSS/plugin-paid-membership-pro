@@ -54,7 +54,7 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					add_filter('pmpro_payment_option_fields', array('PMProGateway_paystack', 'pmpro_payment_option_fields'), 10, 2);
 					add_action( 'wp_ajax_kkd_pmpro_paystack_ipn', array('PMProGateway_paystack', 'kkd_pmpro_paystack_ipn'));
 					add_action( 'wp_ajax_nopriv_kkd_pmpro_paystack_ipn', array('PMProGateway_paystack', 'kkd_pmpro_paystack_ipn'));
-					
+					// add_action( 'pmpro_after_change_membership_level', array('PMProGateway_paystack','kkd_pmpro_after_change_membership_level'), 10, 3 );
 					//code to add at checkout
 					$gateway = pmpro_getGateway();
 					if($gateway == "paystack")
@@ -63,6 +63,7 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 						add_filter('pmpro_required_billing_fields', array('PMProGateway_paystack', 'pmpro_required_billing_fields'));
 						add_filter('pmpro_include_payment_information_fields', '__return_false');
 						add_filter('pmpro_checkout_before_change_membership_level', array('PMProGateway_paystack', 'pmpro_checkout_before_change_membership_level'), 10, 2);
+						
 						add_filter('pmpro_gateways_with_pending_status', array('PMProGateway_paystack', 'pmpro_gateways_with_pending_status'));
 						add_filter('pmpro_pages_shortcode_checkout', array('PMProGateway_paystack', 'pmpro_pages_shortcode_checkout'), 20, 1);
 						add_filter('pmpro_checkout_default_submit_button', array('PMProGateway_paystack', 'pmpro_checkout_default_submit_button'));
@@ -147,6 +148,12 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 						http_response_code(200);
 						exit();
 					}
+
+				static function kkd_pmpro_paystack_disable_subscription($code) {
+					global $wpdb;
+				
+					
+				}
 				/**
 				 * Get a list of payment options that the Paystack gateway needs/supports.
 				 */
@@ -273,6 +280,28 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 				 * Instead of change membership levels, send users to Paystack payment page.
 				 */
 				static function pmpro_checkout_before_change_membership_level($user_id, $morder)
+				{
+					global $wpdb, $discount_code_id;
+					
+					//if no order, no need to pay
+					if(empty($morder)) {
+						return;
+					}
+					if(empty($morder->code))
+						$morder->code = $morder->getRandomCode();	
+						
+					$morder->payment_type = "paystack";
+					$morder->status = "pending";
+					$morder->user_id = $user_id;
+					$morder->saveOrder();
+
+					//save discount code use
+					if(!empty($discount_code_id))
+						$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . $discount_code_id . "', '" . $user_id . "', '" . $morder->id . "', now())");
+
+					$morder->Gateway->sendToPaystack($morder);
+				}
+				static function pmpro_checkout_after_change_membership_level($user_id, $morder)
 				{
 					global $wpdb, $discount_code_id;
 					
@@ -525,6 +554,9 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 												$interval = 'annually';
 
 											}
+
+											// echo $interval.' - '.$pmpro_level->cycle_period;
+											// die();
 											$amount = $pmpro_level->billing_amount;
 											$koboamount = $amount*100;
 											//Create Plan
@@ -677,10 +709,57 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					return $content;
 					
 				}
-				function delete(&$order) {
+				function cancel(&$order) {
+
 					//no matter what happens below, we're going to cancel the order in our system
 					$order->updateStatus("cancelled");
+					$mode = pmpro_getOption("gateway_environment");
+					$code = $order->subscription_transaction_id;
+					if ($mode == 'sandbox') {
+						$key = pmpro_getOption("paystack_tsk");
+					}else{
+						$key = pmpro_getOption("paystack_lsk");
 
+					}
+					if ($order->subscription_transaction_id != "") {
+							# code...
+						$paystack_url = 'https://api.paystack.co/subscription/' . $code;
+						$headers = array(
+							'Authorization' => 'Bearer ' . $key
+						);
+						$args = array(
+							'headers'	=> $headers,
+							'timeout'	=> 60
+						);
+						$request = wp_remote_get( $paystack_url, $args );
+						if( ! is_wp_error( $request ) && 200 == wp_remote_retrieve_response_code( $request ) ) {
+							$paystack_response = json_decode( wp_remote_retrieve_body( $request ) );
+							if ('active' == $paystack_response->data->status && $code == $paystack_response->data->subscription_code && '1' == $paystack_response->status) {
+								
+								$paystack_url = 'https://api.paystack.co/subscription/disable';
+								$headers = array(
+									'Content-Type'	=> 'application/json',
+									'Authorization' => "Bearer ".$key
+								);
+								$body = array(
+									'code'	=> $paystack_response->data->subscription_code,
+									'token' => $paystack_response->data->email_token,
+
+								);
+								$args = array(
+									'body'		=> json_encode( $body ),
+									'headers'	=> $headers,
+									'timeout'	=> 60
+								);
+
+								$request = wp_remote_post( $paystack_url, $args );
+								// print_r($request);
+								if( ! is_wp_error( $request )) {
+									$paystack_response = json_decode(wp_remote_retrieve_body($request));
+								}
+							}
+						}
+					}
 					global $wpdb;
 					$wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
 				}
