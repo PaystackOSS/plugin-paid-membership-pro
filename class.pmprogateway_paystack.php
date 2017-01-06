@@ -735,6 +735,13 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 					global $wpdb;
 					$wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
 				}
+				function delete(&$order) {
+
+					//no matter what happens below, we're going to cancel the order in our system
+					$order->updateStatus("cancelled");
+					global $wpdb;
+					$wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
+				}
 			}
 		}
 	}
