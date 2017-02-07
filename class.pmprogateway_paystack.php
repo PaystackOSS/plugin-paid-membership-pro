@@ -320,7 +320,7 @@ if (!function_exists('KKD_paystack_pmp_gateway_load')) {
 						if ($key  == '') {
 							echo "Api keys not set";
 						}
-						$txn_code = $txn.'_'.$order_id;
+						// $txn_code = $txn.'_'.$order_id;
 
 						$koboamount = $amount*100;
 						
