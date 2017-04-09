@@ -3,7 +3,7 @@
  * Plugin Name: Paystack gateway - Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.0
+ * Version: 1.3
  * Author: Kendysond
  * License: GPLv2 or later
  */

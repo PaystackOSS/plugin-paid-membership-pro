@@ -4,7 +4,7 @@ Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target,Naira,payments,verve
 Requires at least: 3.1
 Tested up to: 4.6.1
-Stable tag: 1.0.1
+Stable tag: 1.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,8 +63,8 @@ You can also follow us on Twitter! **[@paystack](http://twitter.com/paystack)**
 
 
 == Changelog ==
-= 1.0.1 =
-*   Cancel Paystack subscription immediately PMP pro subscription is cancelled. 
+= 1.3 =
+*   Bug fixes
 = 1.0.0 =
 *   First release
 
