@@ -332,17 +332,19 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     // $txn_code = $txn.'_'.$order_id;
 
                     $koboamount = $amount*100;
+                    $currency = pmpro_getOption("currency");
                     
                     $paystack_url = 'https://api.paystack.co/transaction/initialize';
                     $headers = array(
-                        'Content-Type'	=> 'application/json',
-                        'Authorization' => "Bearer ".$key
+                        'Content-Type'  => 'application/json',
+                        'Authorization' => 'Bearer '.$key
                     );
                     //Create Plan
                     $body = array(
-                        'email'	=> $order->Email,
-                        'amount' => $koboamount,
-                        'reference' => $order->code,
+                        'email'        => $order->Email,
+                        'amount'       => $koboamount,
+                        'reference'    => $order->code,
+                        'currency'     => $currency,
                         'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id)
                         // 'metadata' => json_encode(array('custom_fields' => $meta )),
 
