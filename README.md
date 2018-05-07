@@ -1,4 +1,4 @@
-<p align="center"><a href="https://paystack.com/"><img src="https://woocommerce.com/wp-content/themes/woo/images/logo-woocommerce@2x.png" alt="Paystack Paid Membership Pro"></a></p>
+<p align="center"><a href="https://paystack.com/"><img src="https://raw.githubusercontent.com/PaystackHQ/wordpress-paid-membership-pro-paystack/assets/paidmembershipspro%20copy.png" alt="Paystack Paid Membership Pro"></a></p>
 
 # Paystack Gateway for Paid Membership Pro
 
