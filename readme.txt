@@ -12,11 +12,11 @@ Pay with Paystack on Paid Membership Pro
 
 == Description ==
  
-Paid Membership Pro is a complete member management and membership subscriptions plugin for WordPress. 
-Paid Memberships Pro is designed for premium content sites, clubs/associations, subscription products, newsletters and more!
+Paid Membership Pro is a complete member management and membership subscriptions plugin for WordPress. Paid Memberships Pro is designed for premium content sites, clubs/associations, subscription products, newsletters and more!
  
-The Paystack Gateway for Paid Membership Pro allows site owners from Nigeria and Ghana to accept payments from their customers via Paid Membership Pro.
+The **Paystack Gateway for Paid Membership Pro*** allows site owners from Nigeria and Ghana to accept payments from their customers via Paid Membership Pro.
 
+To be able to use the Paystack Gateway for Paid Membership Pro, you must [have an account on Paystack](https://dashboard.paystack.com) from which you will get Test and Live API keys to connect the plugin to your Paystack business. Here are some benefits of using Paystack!
 
 = Intuitive Dashboard =
 Use the Paystack dashboard to manage your customers, payments, and track your growth.
@@ -80,3 +80,8 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
 == Screenshots ==
  
 1. The slick Paystack settings panel.
+
+== Changelog ==
+ 
+= 1.4 =
+* Add quarterly subscription option for recurring payments set to 3 months or 90 days cycle period.
