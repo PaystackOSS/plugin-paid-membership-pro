@@ -3,7 +3,7 @@
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.3
+ * Version: 1.4
  * Author: Paystack
  * License: GPLv2 or later
  */
@@ -531,8 +531,12 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     if (($pmpro_level->cycle_number > 0) && ($pmpro_level->billing_amount > 0) && ($pmpro_level->cycle_period != "")) {
                                         if ($pmpro_level->cycle_number < 10 && $pmpro_level->cycle_period == 'Day') {
                                             $interval = 'weekly';
-                                        } elseif (($pmpro_level->cycle_number > 10) && ($pmpro_level->cycle_period == 'Day')) {
+                                        } elseif (($pmpro_level->cycle_number == 90) && ($pmpro_level->cycle_period == 'Day')) {
+                                            $interval = 'quarterly';
+                                        } elseif (($pmpro_level->cycle_number >= 10) && ($pmpro_level->cycle_period == 'Day')) {
                                             $interval = 'monthly';
+                                        } elseif (($pmpro_level->cycle_number == 3) && ($pmpro_level->cycle_period == 'Month')) {
+                                            $interval = 'quarterly';
                                         } elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Month')) {
                                             $interval = 'monthly';
                                         } elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Year')) {
@@ -620,7 +624,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             'trial_amount'      => $pmpro_level->trial_amount,
                                             'trial_limit'       => $pmpro_level->trial_limit,
                                             'startdate'         => $startdate,
-                                            'enddate'           => $enddate);
+                                            'enddate'           => $enddate
+                                        );
                                     if ($morder->status != 'success') {
                                         
                                         if (pmpro_changeMembershipLevel($custom_level, $morder->user_id, 'changed')) {
