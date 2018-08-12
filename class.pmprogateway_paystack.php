@@ -3,7 +3,7 @@
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.4
+ * Version: 1.4.1
  * Author: Paystack
  * License: GPLv2 or later
  */
@@ -359,9 +359,15 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     // print_r($request);
                     if (!is_wp_error($request)) {
                         $paystack_response = json_decode(wp_remote_retrieve_body($request));
-                        $url = $paystack_response->data->authorization_url;
-                        wp_redirect($url);
-                        exit;
+                        if ($paystack_response->status){
+                            $url = $paystack_response->data->authorization_url;
+                            wp_redirect($url);
+                            exit;
+                        } else {
+                            $order->Gateway->delete($order);
+                            wp_redirect(pmpro_url("checkout", "?level=" . $order->membership_level->id . "&error=" . $paystack_response->message));
+                            exit();
+                        }
                     } else {
                         $order->Gateway->delete($order);
                         wp_redirect(pmpro_url("checkout", "?level=" . $order->membership_level->id . "&error=Failed"));

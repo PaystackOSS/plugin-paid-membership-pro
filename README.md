@@ -13,14 +13,14 @@ If you are a developer, please you can also join our [Slack workspace](https://s
 3. Begin selling!
 
 ## Documentation
-* [Paystack Documentation](https://developers.paystack.co/v1.0/docs/)
+* [Paystack Documentation](https://developers.paystack.co/v2.0/docs/)
 * [Paystack Helpdesk](https://paystack.com/help)
 
 ## Support
 This repository is not suitable for general Paystack support. Please use the issue tracker for bug reports and feature requests directly related to this plugin. For general support, you can reach out by 
 
 * sending a message from [our website](https://paystack.com/contact).
-* posting a question on the plugin support forum.
+* posting a question on [the plugin support forum](https://wordpress.org/support/plugin/paystack-gateway-paid-memberships-pro).
 
 ## Contributing to Paystack Gateway for Paid Membership Pro
 If you have a patch or have stumbled upon an issue with the Paystack Gateway for Paid Membership Pro plugin, you can contribute this back to the code. Please read our [contributor guidelines](https://github.com/PaystackHQ/wordpress-paid-membership-pro-paystack/blob/master/.github/CONTRIBUTING.md) for more information how you can do this.

@@ -4,7 +4,7 @@ Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target, Naira, payments, verve, paid membership pro
 Requires at least: 3.1
 Tested up to: 4.9
-Stable tag: 1.0
+Stable tag: 1.4.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,7 +71,7 @@ You can find help and information on Paystack on our [Help Desk](https://paystac
  
 = Where can I get support or talk to other users? =
  
-If you get stuck, you can ask for help in the [Paystack Gateway for Paid Membership Pro Plugin Forum](https://wordpress.org/support/plugin/paid-paystack-gateway). You can also directly email support@paystack.com for assistance.
+If you get stuck, you can ask for help in the [Paystack Gateway for Paid Membership Pro Plugin Forum](https://wordpress.org/support/plugin/paystack-gateway-paid-memberships-pro). You can also directly email support@paystack.com for assistance.
  
 = Paystack Gateway for Paid Membership Pro is awesome! Can I contribute? =
 
