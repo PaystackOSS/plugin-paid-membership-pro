@@ -149,7 +149,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         } else {    
                             $pk = pmpro_getOption("paystack_lpk");
                         }
-                        $pstk_logger = new pmpro_paystack_plugin_tracker('pm_pro',$pk);
+                        $pstk_logger = new pmpro_paystack_plugin_tracker('pm-pro',$pk);
                         $pstk_logger->log_transaction_success($event->data->reference);
                         break;
                     case 'invoice.create':
@@ -546,7 +546,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     $customer_code = $paystack_response->data->customer->customer_code;
                                     
                                     //Add logger here
-                                    $pstk_logger = new pmpro_paystack_plugin_tracker('pm_pro',$pk);
+                                    $pstk_logger = new pmpro_paystack_plugin_tracker('pm-pro',$pk);
                                     $pstk_logger->log_transaction_success($_REQUEST['trxref']);
 
                                     //--------------------------------------------------
