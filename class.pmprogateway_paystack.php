@@ -7,6 +7,8 @@
  * Author: Paystack
  * License: GPLv2 or later
  */
+
+include_once plugin_dir_path(__FILE__) . 'class-paystack-plugin-tracker.php';
 defined('ABSPATH') or die('No script kiddies please!');
 if (!function_exists('Paystack_Pmp_Gateway_load')) {
     add_action('plugins_loaded', 'Paystack_Pmp_Gateway_load', 20);
@@ -141,6 +143,14 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $morder->getMembershipLevel();
                         $morder->getUser();
                         $morder->Gateway->pmpro_pages_shortcode_confirmation('', $event->data->reference);
+                        $mode = pmpro_getOption("gateway_environment");
+                        if ($mode == 'sandbox') {
+                            $pk = pmpro_getOption("paystack_tpk");
+                        } else {    
+                            $pk = pmpro_getOption("paystack_lpk");
+                        }
+                        $pstk_logger = new pmpro_paystack_plugin_tracker('pm_pro',$pk);
+                        $pstk_logger->log_transaction_success($event->data->reference);
                         break;
                     case 'invoice.create':
                         self::renewpayment($event);
@@ -322,9 +332,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     $mode = pmpro_getOption("gateway_environment");
                     if ($mode == 'sandbox') {
                         $key = pmpro_getOption("paystack_tsk");
+                        $pk = pmpro_getOption("paystack_tpk");
                     } else {
                         $key = pmpro_getOption("paystack_lsk");
-
+                        $pk = pmpro_getOption("paystack_lpk");
                     }
                     if ($key  == '') {
                         echo "Api keys not set";
@@ -509,9 +520,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             $mode = pmpro_getOption("gateway_environment");
                             if ($mode == 'sandbox') {
                                 $key = pmpro_getOption("paystack_tsk");
+                                $pk = pmpro_getOption("paystack_tpk");
                             } else {
                                 $key = pmpro_getOption("paystack_lsk");
-
+                                $pk = pmpro_getOption("paystack_lpk");
                             }
                             $paystack_url = 'https://api.paystack.co/transaction/verify/' . $_REQUEST['trxref'];
                             $headers = array(
@@ -527,6 +539,11 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                 if ('success' == $paystack_response->data->status && $pmpro_level->initial_payment ==  ($paystack_response->data->amount/100)) {
                                     $customer_code = $paystack_response->data->customer->customer_code;
                                     
+                                    //Add logger here
+                                    $pstk_logger = new pmpro_paystack_plugin_tracker('pm_pro',$pk);
+                                    $pstk_logger->log_transaction_success($_REQUEST['trxref']);
+
+                                    //--------------------------------------------------
                                     if (strlen($order->subscription_transaction_id) > 3) {
                                         $enddate = "'" . date("Y-m-d", strtotime("+ " . $order->subscription_transaction_id, current_time("timestamp"))) . "'";
                                     } elseif (!empty($pmpro_level->expiration_number)) {
