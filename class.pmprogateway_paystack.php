@@ -356,8 +356,14 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         'amount'       => $koboamount,
                         'reference'    => $order->code,
                         'currency'     => $currency,
-                        'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id)
-                        // 'metadata' => json_encode(array('custom_fields' => $meta )),
+                        'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id),
+                        'metadata' => json_encode(array('custom_fields' => array(
+                            array(
+                                "display_name"=>"Plugin",
+                                "variable_name"=>"plugin",
+                                "value"=>"pm-pro"
+                            )
+                        ) )),
 
                     );
                     $args = array(
