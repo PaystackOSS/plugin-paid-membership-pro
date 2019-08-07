@@ -1,10 +1,10 @@
 === Paystack Gateway for Paid Membership Pro ===
-Contributors: kendysond, steveamaza
+Contributors: kendysond, steveamaza, lukman008
 Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target, Naira, payments, verve, paid membership pro
 Requires at least: 3.1
-Tested up to: 4.9
-Stable tag: 1.4.1
+Tested up to: 5.2
+Stable tag: 1.5
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -82,6 +82,7 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
 1. The slick Paystack settings panel.
 
 == Changelog ==
- 
+= 1.5 = 
+* Added plugin metrics tracker
 = 1.4 =
 * Add quarterly subscription option for recurring payments set to 3 months or 90 days cycle period.
