@@ -1,10 +1,10 @@
 === Paystack Gateway for Paid Membership Pro ===
-Contributors: kendysond, steveamaza
+Contributors: kendysond, steveamaza, lukman008
 Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target, Naira, payments, verve, paid membership pro
 Requires at least: 3.1
-Tested up to: 4.9
-Stable tag: 1.4.1
+Tested up to: 5.2
+Stable tag: 1.5
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -14,7 +14,7 @@ Pay with Paystack on Paid Membership Pro
  
 Paid Membership Pro is a complete member management and membership subscriptions plugin for WordPress. Paid Memberships Pro is designed for premium content sites, clubs/associations, subscription products, newsletters and more!
  
-The **Paystack Gateway for Paid Membership Pro*** allows site owners from Nigeria and Ghana to accept payments from their customers via Paid Membership Pro.
+The **Paystack Gateway for Paid Membership Pro** allows site owners from Nigeria and Ghana to accept payments from their customers via Paid Membership Pro.
 
 To be able to use the Paystack Gateway for Paid Membership Pro, you must [have an account on Paystack](https://dashboard.paystack.com) from which you will get Test and Live API keys to connect the plugin to your Paystack business. Here are some benefits of using Paystack!
 
@@ -82,9 +82,8 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
 1. The slick Paystack settings panel.
 
 == Changelog ==
- 
+= 1.5 = 
+* Added plugin metrics tracker
+* Add biannual subscription option for recurring payments set to 6 months or 180 days cycle period.
 = 1.4 =
 * Add quarterly subscription option for recurring payments set to 3 months or 90 days cycle period.
-
-= 1.5 =
-* Add biannual subscription option for recurring payments set to 6 months or 180 days cycle period.
