@@ -85,3 +85,6 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
  
 = 1.4 =
 * Add quarterly subscription option for recurring payments set to 3 months or 90 days cycle period.
+
+= 1.5 =
+* Add biannual subscription option for recurring payments set to 6 months or 180 days cycle period.

@@ -562,11 +562,21 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             $interval = 'weekly';
                                         } elseif (($pmpro_level->cycle_number == 90) && ($pmpro_level->cycle_period == 'Day')) {
                                             $interval = 'quarterly';
-                                        } elseif (($pmpro_level->cycle_number >= 10) && ($pmpro_level->cycle_period == 'Day')) {
+                                        }
+                                        elseif (($pmpro_level->cycle_number == 180) && ($pmpro_level->cycle_period == 'Day')) {
+                                            $interval = 'biannually';
+                                        }
+                                         elseif (($pmpro_level->cycle_number >= 10) && ($pmpro_level->cycle_period == 'Day')) {
                                             $interval = 'monthly';
                                         } elseif (($pmpro_level->cycle_number == 3) && ($pmpro_level->cycle_period == 'Month')) {
                                             $interval = 'quarterly';
-                                        } elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Month')) {
+                                        
+                                        }
+                                        elseif (($pmpro_level->cycle_number == 6) && ($pmpro_level->cycle_period == 'Month')) {
+                                            $interval = 'biannually';
+                                        
+                                        }
+                                        elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Month')) {
                                             $interval = 'monthly';
                                         } elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Year')) {
                                             $interval = 'annually';
