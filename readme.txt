@@ -1,5 +1,5 @@
 === Paystack Gateway for Paid Membership Pro ===
-Contributors: kendysond, steveamaza, lukman008
+Contributors: paystack, kendysond, steveamaza, lukman008
 Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target, Naira, payments, verve, paid membership pro
 Requires at least: 3.1
