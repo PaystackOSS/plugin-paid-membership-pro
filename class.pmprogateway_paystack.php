@@ -211,7 +211,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     
                     return $set_date;
                 }
-                function kkd_pmpro_paystack_ipn() 
                 function kkd_pmpro_paystack_ipn()
                 {
                     global $wpdb;
