@@ -82,8 +82,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
 1. The slick Paystack settings panel.
 
 == Changelog ==
+
+= 1.4 =
+* Add quarterly subscription option for recurring payments set to 3 months or 90 days cycle period.
+
 = 1.5 = 
 * Added plugin metrics tracker
 * Add biannual subscription option for recurring payments set to 6 months or 180 days cycle period.
-= 1.4 =
-* Add quarterly subscription option for recurring payments set to 3 months or 90 days cycle period.
+
+
+= 1.6 = 
+* Add functionalty to delay subscriptions renewal using the PM Pro Subscription Delays addon.
