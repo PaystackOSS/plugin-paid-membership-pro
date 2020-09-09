@@ -3,7 +3,7 @@
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.6.1
+ * Version: 1.6.2
  * Author: Paystack
  * License: GPLv2 or later
  */
@@ -235,11 +235,11 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $subscription_code = $event->data->subscription->subscription_code;
                         $email = $event->data->customer->email;
                         $morder->getLastMemberOrderBySubscriptionTransactionID($subscription_code);
-
+                        
                         if (empty($morder)) {
                             exit();
                         }
-                        self::delete($morder);
+                        self::cancelMembership($morder);
                         break;
                     case 'charge.success':
                         $morder =  new MemberOrder($event->data->reference);
@@ -773,7 +773,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             $morder->subscription_transaction_id = $subscription_code;
                                             $morder->subscription_token = $token;
 										
-                                            print_r($morder);
+                                           
 
                                         }
 
@@ -864,6 +864,36 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                     return $content;
 
+                }
+
+                function cancelMembership(&$order){
+                  
+                    if (empty($order)) {
+                        exit();
+                    }
+                    $user_id = $order->user_id;
+                    $level_to_cancel = $order->membership_level->id
+                    
+                    global $wpdb;
+                    $memberships_users_row = $wpdb->get_row( "SELECT * FROM $wpdb->pmpro_memberships_users WHERE user_id = '" . $user_id. "' AND membership_id = '" . $level_to_cancel . "' AND status = 'active' LIMIT 1" );
+                    if ( ! empty( $memberships_users_row ) && ( empty( $memberships_users_row->enddate ) || $memberships_users_row->enddate == '0000-00-00 00:00:00' ) ) {
+						/**
+						 * Filter graced period days when canceling existing subscriptions at checkout.
+						 *
+						 * @param int $days Grace period defaults to 3 days
+						 * @param object $membership Membership row from pmpro_memberships_users including membership_id, user_id, and enddate
+						 *
+						 * @since 1.6.2
+						 *
+						 */
+						$days_grace  = 0;
+						$new_enddate = date( 'Y-m-d H:i:s', current_time( 'timestamp' ) + 3600 * 24 * $days_grace );
+						$wpdb->update( $wpdb->pmpro_memberships_users, array( 'enddate' => $new_enddate ), array(
+							'user_id'       => $user_id,
+							'membership_id' => $level_to_cancel,
+							'status'        => 'active'
+						), array( '%s' ), array( '%d', '%d', '%s' ) );
+					}
                 }
                 function cancel(&$order)
                 {
