@@ -3,7 +3,7 @@
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: Paystack
  * License: GPLv2 or later
  */
@@ -230,6 +230,16 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                         break;
                     case 'subscription.disable':
+                        $amount = $event->data->subscription->amount/100;
+                        $morder = new MemberOrder();
+                        $subscription_code = $event->data->subscription->subscription_code;
+                        $email = $event->data->customer->email;
+                        $morder->getLastMemberOrderBySubscriptionTransactionID($subscription_code);
+
+                        if (empty($morder)) {
+                            exit();
+                        }
+                        self::delete($morder);
                         break;
                     case 'charge.success':
                         $morder =  new MemberOrder($event->data->reference);
@@ -341,6 +351,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             <input type="text" id="paystack_lpk" name="paystack_lpk" size="60" value="<?php echo esc_attr($values['paystack_lpk'])?>" />
                         </td>
                     </tr>
+                   
 
                     <?php
                 }
@@ -437,29 +448,41 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     // $txn_code = $txn.'_'.$order_id;
 
                     $koboamount = $amount*100;
-                    $currency = pmpro_getOption("currency");
+                    // $mcurrency =     
+
+                    // foreach($level_currencies as $level_currency_id => $level_currency)
+                    // {
+                    // if($level_id == $level_currency_id)
+                    // {
+                    // $pmpro_currency = $level_currency[0];
+                    // $pmpro_currency_symbol = $level_currency[1];
+
+                    // }
+                    // }
 
                     $paystack_url = 'https://api.paystack.co/transaction/initialize';
                     $headers = array(
                         'Content-Type'  => 'application/json',
                         'Authorization' => 'Bearer '.$key
                     );
+                  
                     //Create Plan
-                    $body = array(
-                        'email'        => $order->Email,
-                        'amount'       => $koboamount,
-                        'reference'    => $order->code,
-                        'currency'     => $currency,
-                        'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id),
-                        'metadata' => json_encode(array('custom_fields' => array(
-                            array(
-                                "display_name"=>"Plugin",
-                                "variable_name"=>"plugin",
-                                "value"=>"pm-pro"
-                            )
-                        ) )),
+               $body = array(
+                'email'        => $order->Email,
+                'amount'       => $koboamount,
+                'reference'    => $order->code,
+                'currency'     => $currency,
+                'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id),
+                'metadata' => json_encode(array('custom_fields' => array(
+                    array(
+                        "display_name"=>"Plugin",
+                        "variable_name"=>"plugin",
+                        "value"=>"pm-pro"
+                    ),
+                    
+                ), 'custom_filters' => array("recurring" => true))),
 
-                    );
+            );
                     $args = array(
                         'body'      => json_encode($body),
                         'headers'   => $headers,
@@ -644,8 +667,9 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     $pstk_logger->log_transaction_success($_REQUEST['trxref']);
 									do_action('pmpro_after_checkout', $morder->user_id, $morder);
                                     //--------------------------------------------------
-                                    if (strlen($order->subscription_transaction_id) > 3) {
-                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $order->subscription_transaction_id, current_time("timestamp"))) . "'";
+                                    
+                                    if (strlen($morder->subscription_transaction_id) > 3) {
+                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->subscription_transaction_id, current_time("timestamp"))) . "'";
                                     } elseif (!empty($pmpro_level->expiration_number)) {
                                         $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
                                     } else {
@@ -742,11 +766,14 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         $request = wp_remote_post($subscription_url, $args);
                                         if (!is_wp_error($request)) {
                                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
+										
+                                          
                                             $subscription_code = $paystack_response->data->subscription_code;
                                             $token = $paystack_response->data->email_token;
                                             $morder->subscription_transaction_id = $subscription_code;
                                             $morder->subscription_token = $token;
-
+										
+                                            print_r($morder);
 
                                         }
 
@@ -797,11 +824,11 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                                     //send email to member
                                     $pmproemail = new PMProEmail();
-                                    $pmproemail->sendCheckoutEmail($current_user, $invoice);
+                                    $pmproemail->sendCheckoutEmail($current_user, $pmpro_invoice);
 
                                     //send email to admin
                                     $pmproemail = new PMProEmail();
-                                    $pmproemail->sendCheckoutAdminEmail($current_user, $invoice);
+                                    $pmproemail->sendCheckoutAdminEmail($current_user, $pmpro_invoice);
                                     // echo "<pre>";
                                     // print_r($pmpro_level);
                                     $content = "<ul>
