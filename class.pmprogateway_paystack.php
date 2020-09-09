@@ -641,7 +641,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             $startdate = apply_filters("pmpro_checkout_start_date", "'" . current_time("mysql") . "'", $morder->user_id, $pmpro_level);
 
                             $mode = pmpro_getOption("gateway_environment");
-                            if ($mode == 'sandbox') {
+                            if ($mode == "sandbox") {
                                 $key = pmpro_getOption("paystack_tsk");
                                 $pk = pmpro_getOption("paystack_tpk");
                             } else {
