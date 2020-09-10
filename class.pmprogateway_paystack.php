@@ -232,11 +232,11 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     case 'subscription.disable':
                         $amount = $event->data->subscription->amount/100;
                         $morder = new MemberOrder();
-                        $subscription_code = $event->data->subscription->subscription_code;
+                        $subscription_code = $event->data->subscription_code;
                         $email = $event->data->customer->email;
                         $morder->getLastMemberOrderBySubscriptionTransactionID($subscription_code);
-                        
                         if (empty($morder)) {
+                            print_r('Is Empty');
                             exit();
                         }
                         self::cancelMembership($morder);
@@ -876,6 +876,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     
                     global $wpdb;
                     $memberships_users_row = $wpdb->get_row( "SELECT * FROM $wpdb->pmpro_memberships_users WHERE user_id = '" . $user_id. "' AND membership_id = '" . $level_to_cancel . "' AND status = 'active' LIMIT 1" );
+                    print_r($memberships_users_row)
                     if ( ! empty( $memberships_users_row ) && ( empty( $memberships_users_row->enddate ) || $memberships_users_row->enddate == '0000-00-00 00:00:00' ) ) {
 						/**
 						 * Filter graced period days when canceling existing subscriptions at checkout.
