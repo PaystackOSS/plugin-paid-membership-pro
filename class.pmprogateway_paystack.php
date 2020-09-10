@@ -869,7 +869,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 function cancelMembership(&$order){
 //                  
                     if (empty($order)) {
-                        print_r("Empty order")
+                        print_r("Empty order");
                         exit();
                     }
                     $user_id = $order->user_id;
