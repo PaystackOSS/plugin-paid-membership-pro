@@ -867,17 +867,16 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 }
 
                 function cancelMembership(&$order){
-                  
+//                   print_r($order);
                     if (empty($order)) {
                         exit();
                     }
                     $user_id = $order->user_id;
-                    $level_to_cancel = $order->membership_level->id;
+                    $level_to_cancel = $order->membership_id;
                     
                     global $wpdb;
                     $memberships_users_row = $wpdb->get_row( "SELECT * FROM $wpdb->pmpro_memberships_users WHERE user_id = '" . $user_id. "' AND membership_id = '" . $level_to_cancel . "' AND status = 'active' LIMIT 1" );
-                    print_r($memberships_users_row)
-                    if ( ! empty( $memberships_users_row ) && ( empty( $memberships_users_row->enddate ) || $memberships_users_row->enddate == '0000-00-00 00:00:00' ) ) {
+                    if ( ! empty( $memberships_users_row )  ) {
 						/**
 						 * Filter graced period days when canceling existing subscriptions at checkout.
 						 *
@@ -889,11 +888,12 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 						 */
 						$days_grace  = 0;
 						$new_enddate = date( 'Y-m-d H:i:s', current_time( 'timestamp' ) + 3600 * 24 * $days_grace );
-						$wpdb->update( $wpdb->pmpro_memberships_users, array( 'enddate' => $new_enddate ), array(
+						$result = $wpdb->update( $wpdb->pmpro_memberships_users, array( 'enddate' => $new_enddate ), array(
 							'user_id'       => $user_id,
 							'membership_id' => $level_to_cancel,
 							'status'        => 'active'
 						), array( '%s' ), array( '%d', '%d', '%s' ) );
+						print_r($result);
 					}
                 }
                 function cancel(&$order)
