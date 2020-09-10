@@ -867,8 +867,9 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 }
 
                 function cancelMembership(&$order){
-//                   print_r($order);
+//                  
                     if (empty($order)) {
+                        print_r("Empty order")
                         exit();
                     }
                     $user_id = $order->user_id;
@@ -894,7 +895,9 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 							'status'        => 'active'
 						), array( '%s' ), array( '%d', '%d', '%s' ) );
 						print_r($result);
-					}
+					}else{
+                        print_r("No records were found with user - ". $user_id." level - ". $level_to_cancel);
+                    }
                 }
                 function cancel(&$order)
                 {
