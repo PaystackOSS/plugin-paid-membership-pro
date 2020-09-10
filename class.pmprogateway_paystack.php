@@ -872,7 +872,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         exit();
                     }
                     $user_id = $order->user_id;
-                    $level_to_cancel = $order->membership_level->id
+                    $level_to_cancel = $order->membership_level->id;
                     
                     global $wpdb;
                     $memberships_users_row = $wpdb->get_row( "SELECT * FROM $wpdb->pmpro_memberships_users WHERE user_id = '" . $user_id. "' AND membership_id = '" . $level_to_cancel . "' AND status = 'active' LIMIT 1" );
