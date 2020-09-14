@@ -91,5 +91,7 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
 * Add biannual subscription option for recurring payments set to 6 months or 180 days cycle period.
 
 
-= 1.6 = 
+= 1.6.0 = 
 * Add functionalty to delay subscriptions renewal using the PM Pro Subscription Delays addon.
+= 1.6.1 = 
+* BUG-FIX -  Disabled non-recurring payment methods like USSD, QR for subscription plansetc.
