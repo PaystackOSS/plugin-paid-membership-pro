@@ -875,7 +875,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     $user_id = $order->user_id;
                     $level_to_cancel = $order->membership_id;
                     if(empty($user_id) || empty($level_to_cancel){
-                        print_r($order)
+                        print_r($order);
                         exit();
                     })
                     global $wpdb;
