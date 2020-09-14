@@ -234,12 +234,18 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $morder = new MemberOrder();
                         $subscription_code = $event->data->subscription_code;
                         $email = $event->data->customer->email;
-                        $morder->getLastMemberOrderBySubscriptionTransactionID($subscription_code);
-                        if (empty($morder)) {
-                            print_r('Is Empty');
+                        $morder->Email = $email;
+                        $users_row = $wpdb->get_row( "SELECT ID, display_name FROM $wpdb->users WHERE user_email = '" . $email. "' LIMIT 1" );
+                        if ( ! empty( $users_row )  ) {
+                            $user_id = $users_row->ID;
+                            $user = get_userdata($user_id);
+                            $user->membership_level = pmpro_getMembershipLevelForUser($user_id);
+                        }
+                        if (empty($user)) {
+                            print_r('Could not get user');
                             exit();
                         }
-                        self::cancelMembership($morder);
+                        self::cancelMembership($user);
                         break;
                     case 'charge.success':
                         $morder =  new MemberOrder($event->data->reference);
@@ -767,7 +773,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         if (!is_wp_error($request)) {
                                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
 										
-                                          
+                                            print_r($paystack_response);
                                             $subscription_code = $paystack_response->data->subscription_code;
                                             $token = $paystack_response->data->email_token;
                                             $morder->subscription_transaction_id = $subscription_code;
@@ -866,16 +872,15 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                 }
 
-                function cancelMembership(&$order){
+                function cancelMembership(&$user){
 //                  
-                    if (empty($order)) {
-                        print_r("Empty order");
+                    if (empty($user)) {
+                        print_r("Empty user object");
                         exit();
                     }
-                    $user_id = $order->user_id;
-                    $level_to_cancel = $order->membership_id;
+                    $user_id = $user->ID;
+                    $level_to_cancel = $user->membership_level->ID;
                     if(empty($user_id) || empty($level_to_cancel)){
-                        print_r($order);
                         exit();
                     }
                     global $wpdb;
