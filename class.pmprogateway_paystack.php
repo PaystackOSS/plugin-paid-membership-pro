@@ -245,7 +245,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $morder =  new MemberOrder($event->data->reference);
                         $morder->getMembershipLevel();
                         $morder->getUser();
-                        $morder->Gateway->pmpro_pages_shortcode_confirmation('', $event->data->reference);
+                        // $morder->Gateway->pmpro_pages_shortcode_confirmation('', $event->data->reference);
                         $mode = pmpro_getOption("gateway_environment");
                         if ($mode == 'sandbox') {
                             $pk = pmpro_getOption("paystack_tpk");
