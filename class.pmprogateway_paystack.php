@@ -265,8 +265,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         self::renewpayment($event);
                     case 'invoice.update':
                         self::renewpayment($event);
-
-                        break;
+                  
                     }
                     http_response_code(200);
                     exit();
