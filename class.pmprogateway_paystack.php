@@ -3,7 +3,7 @@
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.6.2
+ * Version: 1.6.3
  * Author: Paystack
  * License: GPLv2 or later
  */
@@ -883,15 +883,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     global $wpdb;
                     $memberships_users_row = $wpdb->get_row( "SELECT * FROM $wpdb->pmpro_memberships_users WHERE user_id = '" . $user_id. "' AND membership_id = '" . $level_to_cancel . "' AND status = 'active' LIMIT 1" );
                     if ( ! empty( $memberships_users_row )  ) {
-						/**
-						 * Filter graced period days when canceling existing subscriptions at checkout.
-						 *
-						 * @param int $days Grace period defaults to 3 days
-						 * @param object $membership Membership row from pmpro_memberships_users including membership_id, user_id, and enddate
-						 *
-						 * @since 1.6.2
-						 *
-						 */
+					
 						$days_grace  = 0;
 						$new_enddate = date( 'Y-m-d H:i:s', current_time( 'timestamp' ) + 3600 * 24 * $days_grace );
 						$result = $wpdb->update( $wpdb->pmpro_memberships_users, array( 'enddate' => $new_enddate ), array(
