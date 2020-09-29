@@ -94,6 +94,8 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
 = 1.6.0 = 
 * Add functionalty to delay subscriptions renewal using the PM Pro Subscription Delays addon.
 = 1.6.1 = 
-* BUG-FIX -  Disabled non-recurring payment methods like USSD, QR for subscription plansetc.
+* BUG-FIX -  Disabled non-recurring payment methods like USSD, QR for subscription plans etc.
 = 1.6.2 =
-* BUG FIX - Implement webhook for canceelleed subscriptions
+* BUG FIX - Implement webhook to listen for cancelled subscriptions.
+= 1.6.3 = 
+* BUG FIX - Fix issue where setting webhook URL automatically cancels customer subscriptions.
