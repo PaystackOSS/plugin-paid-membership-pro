@@ -3,8 +3,8 @@ Contributors: paystack, kendysond, steveamaza, lukman008
 Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target, Naira, payments, verve, paid membership pro
 Requires at least: 3.1
-Tested up to: 5.2
-Stable tag: 1.5
+Tested up to: 5.5
+Stable tag: 1.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
