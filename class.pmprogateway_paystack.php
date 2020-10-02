@@ -580,6 +580,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         //save
                         if ($morder->status != 'success') {
 
+                            $_REQUEST['cancel_membership'] = false; // Do NOT cancel gateway subscription
+
                             if (pmpro_changeMembershipLevel($custom_level, $morder->user_id, 'changed')) {
                                 $morder->status = "success";
                                 $morder->saveOrder();
@@ -630,6 +632,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     if ($reference != null) {
                         $_REQUEST['trxref'] = $reference;
                     }
+                   
 
                     if (empty($pmpro_invoice)) {
                         $morder =  new MemberOrder($_REQUEST['trxref']);
@@ -799,6 +802,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             'enddate'           => $enddate
                                         );
                                     if ($morder->status != 'success') {
+
+                                        $_REQUEST['cancel_membership'] = false; // Do NOT cancel gateway subscription
 
                                         if (pmpro_changeMembershipLevel($custom_level, $morder->user_id, 'changed')) {
                                             $morder->membership_id = $pmpro_level->id;
