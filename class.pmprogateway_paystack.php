@@ -922,6 +922,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             'timeout' => 60
                         );
                         $backtrace = self::get_caller_info();
+                        $furtherbacktrace = wp_debug_backtrace_summary();
                         $request = wp_remote_get($paystack_url, $args);
                         if (!is_wp_error($request) && 200 == wp_remote_retrieve_response_code($request)) {
                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
@@ -935,13 +936,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                 $body = array(
                                     'code'  => $paystack_response->data->subscription_code,
                                     'token' => $paystack_response->data->email_token,
-                                    'debug_trace'=> $backtrace
+                                    'debug_trace'=> $backtrace . " ". $furtherbacktrace
                                 );
                                 $args = array(
                                     'body'      => json_encode($body),
                                     'headers'   => $headers,
                                     'timeout'   => 60,
-                                    'user-agent' => $backtrace
+                                    'user-agent' => . 'Wordpress/ '. $backtrace . " ". $furtherbacktrace
                                 );
 
                                 $request = wp_remote_post($paystack_url, $args);
