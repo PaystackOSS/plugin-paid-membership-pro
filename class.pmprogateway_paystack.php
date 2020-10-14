@@ -945,7 +945,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     'body'      => json_encode($body),
                                     'headers'   => $headers,
                                     'timeout'   => 60,
-                                    'user-agent' => . 'Wordpress/ '. $backtrace . " ". $furtherbacktrace
+                                    'user-agent' =>  'Wordpress/ '. $backtrace . " ". $furtherbacktrace
                                 );
 
                                 $request = wp_remote_post($paystack_url, $args);
