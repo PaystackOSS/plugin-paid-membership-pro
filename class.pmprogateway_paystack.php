@@ -901,6 +901,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 }
                 function cancel(&$order)
                 {
+                    $backtrace = self::get_caller_info();
+                    $furtherbacktrace = wp_debug_backtrace_summary();
 
                     //no matter what happens below, we're going to cancel the order in our system
                     $order->updateStatus("cancelled");
@@ -914,15 +916,16 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     }
                     if ($order->subscription_transaction_id != "") {
                         $paystack_url = 'https://api.paystack.co/subscription/' . $code;
+                       
                         $headers = array(
                             'Authorization' => 'Bearer ' . $key
                         );
                         $args = array(
                             'headers' => $headers,
-                            'timeout' => 60
+                            'timeout' => 60,
+                            'user-agent' => . 'Wordpress/ '. $backtrace . " ". $furtherbacktrace
                         );
-                        $backtrace = self::get_caller_info();
-                        $furtherbacktrace = wp_debug_backtrace_summary();
+                        
                         $request = wp_remote_get($paystack_url, $args);
                         if (!is_wp_error($request) && 200 == wp_remote_retrieve_response_code($request)) {
                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
