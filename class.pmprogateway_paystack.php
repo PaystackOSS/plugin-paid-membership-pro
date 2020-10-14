@@ -676,9 +676,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 									do_action('pmpro_after_checkout', $morder->user_id, $morder);
                                     //--------------------------------------------------
                                     
-                                    if (strlen($morder->subscription_transaction_id) > 3) {
-                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->subscription_transaction_id, current_time("timestamp"))) . "'";
-                                    } elseif (!empty($pmpro_level->expiration_number)) {
+                                   if (!empty($pmpro_level->expiration_number)) {
                                         $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
                                     } else {
                                         $enddate = "NULL";
@@ -923,6 +921,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             'headers' => $headers,
                             'timeout' => 60
                         );
+                        $backtrace = self::get_caller_info();
                         $request = wp_remote_get($paystack_url, $args);
                         if (!is_wp_error($request) && 200 == wp_remote_retrieve_response_code($request)) {
                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
@@ -936,12 +935,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                 $body = array(
                                     'code'  => $paystack_response->data->subscription_code,
                                     'token' => $paystack_response->data->email_token,
-
+                                    'debug_trace'=> $backtrace
                                 );
                                 $args = array(
                                     'body'      => json_encode($body),
                                     'headers'   => $headers,
-                                    'timeout'   => 60
+                                    'timeout'   => 60,
+                                    'user-agent' => $backtrace
                                 );
 
                                 $request = wp_remote_post($paystack_url, $args);
@@ -955,6 +955,38 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     global $wpdb;
                     $wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
                 }
+                function get_caller_info() {
+                    $c = '';
+                    $file = '';
+                    $func = '';
+                    $class = '';
+                    $trace = debug_backtrace();
+                    if (isset($trace[2])) {
+                        $file = $trace[1]['file'];
+                        $func = $trace[2]['function'];
+                        if ((substr($func, 0, 7) == 'include') || (substr($func, 0, 7) == 'require')) {
+                            $func = '';
+                        }
+                    } else if (isset($trace[1])) {
+                        $file = $trace[1]['file'];
+                        $func = '';
+                    }
+                    if (isset($trace[3]['class'])) {
+                        $class = $trace[3]['class'];
+                        $func = $trace[3]['function'];
+                        $file = $trace[2]['file'];
+                    } else if (isset($trace[2]['class'])) {
+                        $class = $trace[2]['class'];
+                        $func = $trace[2]['function'];
+                        $file = $trace[1]['file'];
+                    }
+                    if ($file != '') $file = basename($file);
+                    $c = $file . ": ";
+                    $c .= ($class != '') ? ":" . $class . "->" : "";
+                    $c .= ($func != '') ? $func . "(): " : "";
+                    return($c);
+                }
+                
                 function delete(&$order)
                 {
                     //no matter what happens below, we're going to cancel the order in our system
