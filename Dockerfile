@@ -8,6 +8,8 @@ RUN apt-get -y install wget unzip zip
 ADD https://downloads.wordpress.org/plugin/paid-memberships-pro.latest-stable.zip /dist
 RUN cd /dist && unzip paid-memberships-pro.latest-stable.zip && rm paid-memberships-pro.latest-stable.zip
 
+ADD https://downloads.wordpress.org/plugin/wp-debugging.2.9.2.zip /dist
+RUN cd /dist && unzip wp-debugging.2.9.2.zip && rm wp-debugging.2.9.2.zip
 
 FROM wordpress:php7.2
 
