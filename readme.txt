@@ -3,7 +3,7 @@ Contributors: paystack, kendysond, steveamaza, lukman008
 Donate link: https://paystack.com/demo
 Tags: paystack, recurrent payments, nigeria, mastercard, visa, target, Naira, payments, verve, paid membership pro
 Requires at least: 3.1
-Tested up to: 5.5
+Tested up to: 5.8
 Stable tag: 1.6.4
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -99,3 +99,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/PaystackHQ/pa
 * Implement webhook to listen for cancelled subscriptions.
 = 1.6.3 = 
 * BUG FIX - Fix issue where setting webhook URL automatically cancels customer subscriptions.
+
