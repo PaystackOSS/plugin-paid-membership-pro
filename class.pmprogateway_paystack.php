@@ -425,7 +425,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                 function sendToPaystack(&$order)
                 {
-                    global $wp;
+                    global $wp, $pmpro_currency;
 
                     do_action("pmpro_paypalexpress_session_vars");
 
@@ -476,7 +476,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 'email'        => $order->Email,
                 'amount'       => $koboamount,
                 'reference'    => $order->code,
-                'currency'     => $currency,
+                'currency'     => $pmpro_currency,
                 'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id),
                 'metadata' => json_encode(array('custom_fields' => array(
                     array(
