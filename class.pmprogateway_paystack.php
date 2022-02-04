@@ -679,6 +679,12 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     
                                     if (strlen($morder->subscription_transaction_id) > 3) {
                                         $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->subscription_transaction_id, current_time("timestamp"))) . "'";
+
+                                        // Override the previous calculation
+                                        $__date = date_create(date("Y-m-d H:i:s", current_time("timestamp")));
+                                        date_add($__date, date_interval_create_from_date_string("".$pmpro_level->cycle_number." ".$pmpro_level->cycle_period.""));
+
+                                        $enddate = "'" . $__date->format("Y-m-d H:i:s") . "'";
                                     } elseif (!empty($pmpro_level->expiration_number)) {
                                         $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
                                     } else {
