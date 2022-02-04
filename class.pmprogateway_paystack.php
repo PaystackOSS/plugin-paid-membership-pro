@@ -667,7 +667,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             $request = wp_remote_get($paystack_url, $args);
                             if (!is_wp_error($request) && 200 == wp_remote_retrieve_response_code($request) ) {
                                 $paystack_response = json_decode(wp_remote_retrieve_body($request));
-                                if ('success' == $paystack_response->data->status && $pmpro_level->initial_payment ==  ($paystack_response->data->amount/100)) {
+                                // if ('success' == $paystack_response->data->status && $pmpro_level->initial_payment ==  ($paystack_response->data->amount/100)) {
+                                if ('success' == $paystack_response->data->status && $morder->total ==  ($paystack_response->data->amount / 100)) {
                                     $customer_code = $paystack_response->data->customer->customer_code;
 
                                     //Add logger here
