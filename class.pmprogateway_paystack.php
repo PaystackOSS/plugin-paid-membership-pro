@@ -3,7 +3,7 @@
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
  * Plugin URI: https://paystack.com
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.6.4
+ * Version: 1.7.0
  * Author: Paystack
  * License: GPLv2 or later
  */
@@ -425,7 +425,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                 function sendToPaystack(&$order)
                 {
-                    global $wp;
+                    global $wp, $pmpro_currency;
 
                     do_action("pmpro_paypalexpress_session_vars");
 
@@ -476,7 +476,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 'email'        => $order->Email,
                 'amount'       => $koboamount,
                 'reference'    => $order->code,
-                'currency'     => $currency,
+                'currency'     => $pmpro_currency,
                 'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id),
                 'metadata' => json_encode(array('custom_fields' => array(
                     array(
@@ -667,7 +667,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             $request = wp_remote_get($paystack_url, $args);
                             if (!is_wp_error($request) && 200 == wp_remote_retrieve_response_code($request) ) {
                                 $paystack_response = json_decode(wp_remote_retrieve_body($request));
-                                if ('success' == $paystack_response->data->status && $pmpro_level->initial_payment ==  ($paystack_response->data->amount/100)) {
+                                // if ('success' == $paystack_response->data->status && $pmpro_level->initial_payment ==  ($paystack_response->data->amount/100)) {
+                                if ('success' == $paystack_response->data->status && $morder->total ==  ($paystack_response->data->amount / 100)) {
                                     $customer_code = $paystack_response->data->customer->customer_code;
 
                                     //Add logger here
@@ -676,7 +677,15 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 									do_action('pmpro_after_checkout', $morder->user_id, $morder);
                                     //--------------------------------------------------
                                     
-                                   if (!empty($pmpro_level->expiration_number)) {
+                                    if (strlen($morder->subscription_transaction_id) > 3) {
+                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->subscription_transaction_id, current_time("timestamp"))) . "'";
+
+                                        // Override the previous calculation
+                                        $__date = date_create(date("Y-m-d H:i:s", current_time("timestamp")));
+                                        date_add($__date, date_interval_create_from_date_string("".$pmpro_level->cycle_number." ".$pmpro_level->cycle_period.""));
+
+                                        $enddate = "'" . $__date->format("Y-m-d H:i:s") . "'";
+                                    } elseif (!empty($pmpro_level->expiration_number)) {
                                         $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
                                     } else {
                                         $enddate = "NULL";
