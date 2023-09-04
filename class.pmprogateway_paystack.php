@@ -211,8 +211,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     
                     return $set_date;
                 }
-                function kkd_pmpro_paystack_ipn()
-                {
+
+                static function kkd_pmpro_paystack_ipn() {
                     global $wpdb;
                     // if ((strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' ) || !array_key_exists('HTTP_X_PAYSTACK_SIGNATURE', $_SERVER) ) {
                     //     exit();
