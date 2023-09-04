@@ -217,14 +217,20 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     // if ((strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' ) || !array_key_exists('HTTP_X_PAYSTACK_SIGNATURE', $_SERVER) ) {
                     //     exit();
                     // }
-                    define('SHORTINIT', true);
+
                     $input = @file_get_contents("php://input");
                     $event = json_decode($input);
+
+                    // No event found, bail.
+                    if ( empty( $event ) ) {
+                        return;
+                    }
                     // echo "<pre>";
                     // print_r($event);
                     // if(!$_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] || ($_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] !== hash_hmac('sha512', $input, paystack_recurrent_billing_get_secret_key()))){
                     //   exit();
                     // }
+
                     switch($event->event){
                     case 'subscription.create':
 
@@ -235,13 +241,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $subscription_code = $event->data->subscription_code;
                         $email = $event->data->customer->email;
                         $morder->Email = $email;
-                        $users_row = $wpdb->get_row( "SELECT ID, display_name FROM $wpdb->users WHERE user_email = '" . $email. "' LIMIT 1" );
+                        $users_row = $wpdb->get_row( "SELECT ID, display_name FROM $wpdb->users WHERE user_email = '" . esc_sql( $email ). "' LIMIT 1" );
                         if ( ! empty( $users_row )  ) {
                             $user_id = $users_row->ID;
                             $user = get_userdata($user_id);
                             $user->membership_level = pmpro_getMembershipLevelForUser($user_id);
                         }
-                        if (empty($user)) {
+                        if ( empty( $user ) ) {
                             print_r('Could not get user');
                             exit();
                         }
@@ -310,20 +316,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 static function pmpro_payment_option_fields($values, $gateway)
                 {
                     ?>
-                    <tr class="pmpro_settings_divider gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
-                        <td colspan="2">
-                            <?php _e('Paystack API Configuration', 'pmpro'); ?>
-                        </td>
-                    </tr>
-                    <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
-                        <th scope="row" valign="top">
-                            <label><?php _e('Webhook', 'pmpro');?>:</label>
-                        </th>
-                        <td>
-                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL', 'pmpro');?> <pre><?php echo admin_url("admin-ajax.php") . "?action=kkd_pmpro_paystack_ipn";?></pre></p>
-
-                        </td>
-                    </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
                             <label for="paystack_tsk"><?php _e('Test Secret Key', 'pmpro');?>:</label>
@@ -356,8 +348,15 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             <input type="text" id="paystack_lpk" name="paystack_lpk" size="60" value="<?php echo esc_attr($values['paystack_lpk'])?>" />
                         </td>
                     </tr>
-                   
+                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
+                        <th scope="row" valign="top">
+                            <label><?php _e('Webhook', 'pmpro');?>:</label>
+                        </th>
+                        <td>
+                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL to', 'pmpro');?><br/><code><?php echo admin_url("admin-ajax.php") . "?action=kkd_pmpro_paystack_ipn";?></code></p>
 
+                        </td>
+                    </tr>
                     <?php
                 }
 
@@ -1011,4 +1010,3 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
         }
     }
 }
-?>
