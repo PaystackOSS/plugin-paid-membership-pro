@@ -68,9 +68,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         add_filter('pmpro_checkout_before_change_membership_level', array('PMProGateway_Paystack', 'pmpro_checkout_before_change_membership_level'), 10, 2);
 
                         add_filter('pmpro_gateways_with_pending_status', array('PMProGateway_Paystack', 'pmpro_gateways_with_pending_status'));
-                        add_filter('pmpro_pages_shortcode_checkout', array('PMProGateway_Paystack', 'pmpro_pages_shortcode_checkout'), 20, 1);
+   
                         add_filter('pmpro_checkout_default_submit_button', array('PMProGateway_Paystack', 'pmpro_checkout_default_submit_button'));
                         // custom confirmation page
+
                         add_filter('pmpro_pages_shortcode_confirmation', array('PMProGateway_Paystack', 'pmpro_pages_shortcode_confirmation'), 20, 1);
                     }
                 }
@@ -502,12 +503,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             wp_redirect($url);
                             exit;
                         } else {
-                            $order->Gateway->delete($order);
                             wp_redirect(pmpro_url("checkout", "?level=" . $order->membership_level->id . "&error=" . $paystack_response->message));
                             exit();
                         }
                     } else {
-                        $order->Gateway->delete($order);
                         wp_redirect(pmpro_url("checkout", "?level=" . $order->membership_level->id . "&error=Failed"));
                         exit();
                     }
@@ -599,26 +598,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                 }
 
-                static function pmpro_pages_shortcode_checkout($content)
-                {
-                    $morder = new MemberOrder();
-                    $found = $morder->getLastMemberOrder(get_current_user_id(), apply_filters("pmpro_confirmation_order_status", array("pending")));
-                    if ($found) {
-                        $morder->Gateway->delete($morder);
-                    }
-
-                    if (isset($_REQUEST['error'])) {
-                        global $pmpro_msg, $pmpro_msgt;
-
-                        $pmpro_msg = __("IMPORTANT: Something went wrong during the payment. Please try again later or contact the site owner to fix this issue.<br/>" . urldecode($_REQUEST['error']), "pmpro");
-                        $pmpro_msgt = "pmpro_error";
-
-                        $content = "<div id='pmpro_message' class='pmpro_message ". $pmpro_msgt . "'>" . $pmpro_msg . "</div>" . $content;
-                    }
-
-                    return $content;
-                }
-
                 /**
                  * Custom confirmation page
                  */
@@ -676,42 +655,40 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 									do_action('pmpro_after_checkout', $morder->user_id, $morder);
                                     //--------------------------------------------------
                                     
-                                    if (strlen($morder->subscription_transaction_id) > 3) {
-                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->subscription_transaction_id, current_time("timestamp"))) . "'";
-
-                                        // Override the previous calculation
-                                        $__date = date_create(date("Y-m-d H:i:s", current_time("timestamp")));
-                                        date_add($__date, date_interval_create_from_date_string("".$pmpro_level->cycle_number." ".$pmpro_level->cycle_period.""));
-
-                                        $enddate = "'" . $__date->format("Y-m-d H:i:s") . "'";
-                                    } elseif (!empty($pmpro_level->expiration_number)) {
-                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
+                                    // Let's make sure we're setting an expiration date if we've set one.
+                                    if ( ! empty( $pmpro_level->expiration_number ) ) {
+                                        $enddate =  "'" . date( "Y-m-d H:i:00", strtotime( "+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time( 'timestamp' ) ) ) . "'";
                                     } else {
-                                        $enddate = "NULL";
+                                        $enddate = "0000-00-00 00:00:00";
                                     }
-                                    if (($pmpro_level->cycle_number > 0) && ($pmpro_level->billing_amount > 0) && ($pmpro_level->cycle_period != "")) {
-                                        if ($pmpro_level->cycle_number < 10 && $pmpro_level->cycle_period == 'Day') {
+
+
+                                    // There's recurring settings, lets convert to Paystack intervals now.
+                                    if ( $pmpro_level->billing_amount > 0 ) {
+
+                                        if ( $pmpro_level->cycle_period == 'Day' ) {
+                                            $interval = 'daily';
+                                        }
+
+                                        if ( $pmpro_level->cycle_period == 'Week' ) {
                                             $interval = 'weekly';
-                                        } elseif (($pmpro_level->cycle_number == 90) && ($pmpro_level->cycle_period == 'Day')) {
-                                            $interval = 'quarterly';
                                         }
-                                        elseif (($pmpro_level->cycle_number == 180) && ($pmpro_level->cycle_period == 'Day')) {
-                                            $interval = 'biannually';
-                                        }
-                                         elseif (($pmpro_level->cycle_number >= 10) && ($pmpro_level->cycle_period == 'Day')) {
+
+                                        if ( $pmpro_level->cycle_period == 'Month' ) {
                                             $interval = 'monthly';
-                                        } elseif (($pmpro_level->cycle_number == 3) && ($pmpro_level->cycle_period == 'Month')) {
-                                            $interval = 'quarterly';
-                                        
                                         }
-                                        elseif (($pmpro_level->cycle_number == 6) && ($pmpro_level->cycle_period == 'Month')) {
-                                            $interval = 'biannually';
-                                        
-                                        }
-                                        elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Month')) {
-                                            $interval = 'monthly';
-                                        } elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Year')) {
+                                       
+                                        if ( $pmpro_level->cycle_period == 'Year' ) {
                                             $interval = 'annually';
+                                        }
+
+                                        // Biannual and quarterly conversion.
+                                        if ( $pmpro_level->cycle_number == 3 && $pmpro_level->cycle_period == 'Month' ) {
+                                            $interval = 'quarterly';
+                                        }
+
+                                        if ( $pmpro_level->cycle_number == 6 && $pmpro_level->cycle_period == 'Month' ) {
+                                            $interval = 'biannually';
                                         }
 
                                         $amount = $pmpro_level->billing_amount;
@@ -907,13 +884,16 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         print_r("No records were found with user - ". $user_id." level - ". $level_to_cancel);
                     }
                 }
-                function cancel(&$order)
+                function cancel(&$order, $update_status = true)
                 {
                     $backtrace = self::get_caller_info();
                     $furtherbacktrace = wp_debug_backtrace_summary();
 
                     //no matter what happens below, we're going to cancel the order in our system
-                    $order->updateStatus("cancelled");
+                    if ( $update_status ) {
+                        $order->updateStatus( "cancelled" );
+                    }
+
                     $mode = pmpro_getOption("gateway_environment");
                     $code = $order->subscription_transaction_id;
                     if ($mode == 'sandbox') {
@@ -964,8 +944,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             }
                         }
                     }
-                    global $wpdb;
-                    $wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
                 }
                 function get_caller_info() {
                     $c = '';
@@ -997,14 +975,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     $c .= ($class != '') ? ":" . $class . "->" : "";
                     $c .= ($func != '') ? $func . "(): " : "";
                     return($c);
-                }
-                
-                function delete(&$order)
-                {
-                    //no matter what happens below, we're going to cancel the order in our system
-                    $order->updateStatus("cancelled");
-                    global $wpdb;
-                    $wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
                 }
             }
         }
