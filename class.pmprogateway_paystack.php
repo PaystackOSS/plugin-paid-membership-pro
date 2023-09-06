@@ -102,7 +102,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     ?>
                     <span id="pmpro_submit_span">
                     <input type="hidden" name="submit-checkout" value="1" />
-                    <input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if ($pmpro_requirebilling) { _e('Check Out with Paystack', 'pmpro'); } else { _e('Submit and Confirm', 'pmpro');}?> &raquo;" />
+                    <input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if ($pmpro_requirebilling) { _e('Check Out with Paystack', 'paystack-gateway-paid-memberships-pro'); } else { _e('Submit and Confirm', 'paystack-gateway-paid-memberships-pro');}?> &raquo;" />
                     </span>
                     <?php
 
@@ -319,7 +319,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     ?>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="paystack_tsk"><?php _e('Test Secret Key', 'pmpro');?>:</label>
+                            <label for="paystack_tsk"><?php _e('Test Secret Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_tsk" name="paystack_tsk" size="60" value="<?php echo esc_attr($values['paystack_tsk'])?>" />
@@ -327,7 +327,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="paystack_tpk"><?php _e('Test Public Key', 'pmpro');?>:</label>
+                            <label for="paystack_tpk"><?php _e('Test Public Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_tpk" name="paystack_tpk" size="60" value="<?php echo esc_attr($values['paystack_tpk'])?>" />
@@ -335,7 +335,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="paystack_lsk"><?php _e('Live Secret Key', 'pmpro');?>:</label>
+                            <label for="paystack_lsk"><?php _e('Live Secret Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_lsk" name="paystack_lsk" size="60" value="<?php echo esc_attr($values['paystack_lsk'])?>" />
@@ -343,7 +343,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="paystack_lpk"><?php _e('Live Public Key', 'pmpro');?>:</label>
+                            <label for="paystack_lpk"><?php _e('Live Public Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_lpk" name="paystack_lpk" size="60" value="<?php echo esc_attr($values['paystack_lpk'])?>" />
@@ -351,10 +351,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     </tr>
                      <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label><?php _e('Webhook', 'pmpro');?>:</label>
+                            <label><?php _e('Webhook', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
-                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL to', 'pmpro');?><br/><code><?php echo admin_url("admin-ajax.php") . "?action=kkd_pmpro_paystack_ipn";?></code></p>
+                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL to', 'paystack-gateway-paid-memberships-pro');?><br/><code><?php echo admin_url("admin-ajax.php") . "?action=kkd_pmpro_paystack_ipn";?></code></p>
 
                         </td>
                     </tr>
