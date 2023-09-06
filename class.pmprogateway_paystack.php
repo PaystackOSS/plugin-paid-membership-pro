@@ -13,8 +13,6 @@ defined('ABSPATH') or die('No script kiddies please!');
 if (!function_exists('Paystack_Pmp_Gateway_load')) {
     add_action('plugins_loaded', 'Paystack_Pmp_Gateway_load', 20);
 
-    DEFINE('KKD_PAYSTACKPMP', "paystack-paidmembershipspro");
-
     function Paystack_Pmp_Gateway_load()
     {
         // paid memberships pro required
@@ -88,7 +86,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     }
 
                     if ($file == $this_plugin) {
-                        $settings_link = '<a href="'.admin_url('admin.php?page=pmpro-paymentsettings').'">'.__('Settings', KKD_PAYSTACKPMP).'</a>';
+                        $settings_link = '<a href="'.admin_url('admin.php?page=pmpro-paymentsettings').'">'.__('Settings', 'paystack-gateway-paid-memberships-pro').'</a>';
                         array_unshift($links, $settings_link);
                     }
 
@@ -115,7 +113,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 static function pmpro_gateways($gateways)
                 {
                     if (empty($gateways['paystack'])) {
-                        $gateways = array_slice($gateways, 0, 1) + array("paystack" => __('Paystack', KKD_PAYSTACKPMP)) + array_slice($gateways, 1);
+                        $gateways = array_slice($gateways, 0, 1) + array("paystack" => __('Paystack', 'paystack-gateway-paid-memberships-pro')) + array_slice($gateways, 1);
                     }
                     return $gateways;
                 }
@@ -823,10 +821,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     // echo "<pre>";
                                     // print_r($pmpro_level);
                                     $content = "<ul>
-                                        <li><strong>".__('Account', KKD_PAYSTACKPMP).":</strong> ".$current_user->display_name." (".$current_user->user_email.")</li>
-                                        <li><strong>".__('Order', KKD_PAYSTACKPMP).":</strong> ".$pmpro_invoice->code."</li>
-                                        <li><strong>".__('Membership Level', KKD_PAYSTACKPMP).":</strong> ".$pmpro_level->name."</li>
-                                        <li><strong>".__('Amount Paid', KKD_PAYSTACKPMP).":</strong> ".$pmpro_invoice->total." ".$pmpro_currency."</li>
+                                        <li><strong>".__('Account', 'paystack-gateway-paid-memberships-pro').":</strong> ".$current_user->display_name." (".$current_user->user_email.")</li>
+                                        <li><strong>".__('Order', 'paystack-gateway-paid-memberships-pro').":</strong> ".$pmpro_invoice->code."</li>
+                                        <li><strong>".__('Membership Level', 'paystack-gateway-paid-memberships-pro').":</strong> ".$pmpro_level->name."</li>
+                                        <li><strong>".__('Amount Paid', 'paystack-gateway-paid-memberships-pro').":</strong> ".$pmpro_invoice->total." ".$pmpro_currency."</li>
                                     </ul>";
                                     ob_start();
                                     if (file_exists(get_stylesheet_directory() . "/paid-memberships-pro/pages/confirmation.php")) {
