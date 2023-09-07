@@ -1,11 +1,14 @@
 <?php
 /**
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
- * Plugin URI: https://paystack.com
+ * Plugin URI: https://www.paidmembershipspro.com/add-ons/paystack-gateway/
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.7.0
- * Author: Paystack
+ * Version: 1.7.1
+ * Author: Paystack, Paid Memberships Pro
+ * Author URI: https://www.paidmembershipspro.com
  * License: GPLv2 or later
+ * Text Domain: paystack-gateway-paid-memberships-pro
+ * Domain Path: /languages
  */
 
 include_once plugin_dir_path(__FILE__) . 'class-paystack-plugin-tracker.php';
@@ -55,8 +58,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     //add fields to payment settings
                     add_filter('pmpro_payment_options', array('PMProGateway_Paystack', 'pmpro_payment_options'));
                     add_filter('pmpro_payment_option_fields', array('PMProGateway_Paystack', 'pmpro_payment_option_fields'), 10, 2);
+                    add_action('wp_ajax_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'pmpro_paystack_ipn'));
+                    add_action('wp_ajax_nopriv_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'pmpro_paystack_ipn'));
+
+                    // Keeping the deprecated action for backwards compatibility.
                     add_action('wp_ajax_kkd_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'kkd_pmpro_paystack_ipn'));
                     add_action('wp_ajax_nopriv_kkd_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'kkd_pmpro_paystack_ipn'));
+
                     //code to add at checkout
                     $gateway = pmpro_getGateway();
                     if ($gateway == "paystack") {
@@ -211,26 +219,46 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     return $set_date;
                 }
 
-                static function kkd_pmpro_paystack_ipn() {
+                /**
+                 * Wrapper function for newly named function instead to be more inline with PMPro naming conventions.
+                 * DEPRECATED use pmpro_paystack_ipn instead.
+                 * @since 1.0
+                 */
+                static function kdd_pmpro_paystack_ipn() {
+                    pmpro_paystack_ipn();
+                }
+
+                /**
+                 * Webhook handler for Paystack.
+                 * @since 1.0 (Renamed in 1.7.1)
+                 */
+                static function pmpro_paystack_ipn() {
                     global $wpdb;
-                    // if ((strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' ) || !array_key_exists('HTTP_X_PAYSTACK_SIGNATURE', $_SERVER) ) {
-                    //     exit();
-                    // }
+                    
+                    // Let's make sure the request came from Paystack by checking the secret key
+                    if ( ( strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' ) || ! array_key_exists( 'HTTP_X_PAYSTACK_SIGNATURE', $_SERVER ) ) {
+                        exit;
+                    }
+
+                    // Get the relevant secret key based on gateway environment.
+                    $mode = pmpro_getOption("gateway_environment");
+                    if ($mode == 'sandbox') {
+                        $secret_key = pmpro_getOption("paystack_tsk");
+                    } else {
+                        $secret_key = pmpro_getOption("paystack_lsk");
+                    }
+                    
 
                     $input = @file_get_contents("php://input");
+
+                    // The Paystack signature doesn't match the secret key, let's bail.
+                    if ( $_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] !== hash_hmac('sha512', $input, $secret_key ) ) {
+                        exit;
+                    }
+
                     $event = json_decode($input);
 
-                    // No event found, bail.
-                    if ( empty( $event ) ) {
-                        return;
-                    }
-                    // echo "<pre>";
-                    // print_r($event);
-                    // if(!$_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] || ($_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] !== hash_hmac('sha512', $input, paystack_recurrent_billing_get_secret_key()))){
-                    //   exit();
-                    // }
-
-                    switch($event->event){
+                    switch( $event->event ){
                     case 'subscription.create':
 
                         break;
@@ -352,7 +380,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             <label><?php _e('Webhook', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
-                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL to', 'paystack-gateway-paid-memberships-pro');?><br/><code><?php echo admin_url("admin-ajax.php") . "?action=kkd_pmpro_paystack_ipn";?></code></p>
+                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL to', 'paystack-gateway-paid-memberships-pro');?><br/><code><?php echo admin_url("admin-ajax.php") . "?action=pmpro_paystack_ipn";?></code></p>
 
                         </td>
                     </tr>
