@@ -1,0 +1,5 @@
+.gitattributes export-ignore
+.github export-ignore
+CONTRIBUTING.md export-ignore
+README.md export-ignore
+Dockerfile export-ignore
