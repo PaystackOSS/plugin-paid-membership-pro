@@ -247,7 +247,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     global $wpdb;
                     
                     // Let's make sure the request came from Paystack by checking the secret key
-                    if ( ( strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' ) || ! array_key_exists( 'HTTP_X_PAYSTACK_SIGNATURE', $_SERVER ) ) {
+                    if ( ( strtoupper( $_SERVER['REQUEST_METHOD'] ) != 'POST' ) || ! array_key_exists( 'HTTP_X_PAYSTACK_SIGNATURE', $_SERVER ) ) {
                         exit;
                     }
 
