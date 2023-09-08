@@ -54,6 +54,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 {
                     //make sure Paystack is a gateway option
                     add_filter('pmpro_gateways', array('PMProGateway_Paystack', 'pmpro_gateways'));
+                    add_action( 'plugins_loaded', array('PMProGateway_Paystack', 'pmpro_paystack_load_textdomain' ) );
+
 
                     //add fields to payment settings
                     add_filter('pmpro_payment_options', array('PMProGateway_Paystack', 'pmpro_payment_options'));
@@ -80,6 +82,15 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                         add_filter('pmpro_pages_shortcode_confirmation', array('PMProGateway_Paystack', 'pmpro_pages_shortcode_confirmation'), 20, 1);
                     }
+                }
+
+                /**
+                 * Enable localization for the plugin.
+                 *
+                 * @return void
+                 */
+                static function pmpro_paystack_load_textdomain() {
+	                load_plugin_textdomain( 'paystack-gateway-paid-memberships-pro', false, basename( dirname( __FILE__ ) ) . '/languages' );
                 }
 
                 /**
