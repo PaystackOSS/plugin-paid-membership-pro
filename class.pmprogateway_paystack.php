@@ -525,6 +525,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 ), 'custom_filters' => array("recurring" => true))),
 
             );
+
+            // If the level is recurring only allow card payments for the subscription as other methods don't work.
+            $level = $order->getMembershipLevel();
+            if ( pmpro_isLevelRecurring( $level ) ) {
+                $body['channels'] = array( 'card' );
+            }
+
                     $args = array(
                         'body'      => json_encode($body),
                         'headers'   => $headers,
