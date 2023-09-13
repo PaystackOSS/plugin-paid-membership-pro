@@ -4,7 +4,7 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/paystack-gateway/
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
  * Version: 1.7.1
- * Author: Paystack, Paid Memberships Pro
+ * Author: Paid Memberships Pro, Paystack
  * Author URI: https://www.paidmembershipspro.com
  * License: GPLv2 or later
  * Text Domain: paystack-gateway-paid-memberships-pro
@@ -235,7 +235,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                  * DEPRECATED use pmpro_paystack_ipn instead.
                  * @since 1.0
                  */
-                static function kdd_pmpro_paystack_ipn() {
+                static function kkd_pmpro_paystack_ipn() {
                     pmpro_paystack_ipn();
                 }
 
@@ -525,6 +525,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 ), 'custom_filters' => array("recurring" => true))),
 
             );
+
+            // If the level is recurring only allow card payments for the subscription as other methods don't work.
+            $level = $order->getMembershipLevel();
+            if ( pmpro_isLevelRecurring( $level ) ) {
+                $body['channels'] = array( 'card' );
+            }
+
                     $args = array(
                         'body'      => json_encode($body),
                         'headers'   => $headers,

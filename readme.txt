@@ -73,8 +73,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/strangerstudi
 1. The slick Paystack settings panel.
 
 == Changelog ==
-= 1.7.1 =
+= 1.7.1 - 2023-09-13 =
 * SECURITY: Improved security to the webhook handler, this now checks for the presence of the Paystack signature header before processing the request.
+* ENHANCEMENT: Only allow card checkout for recurring subscriptions as other payment options don't allow subscriptions.
 * BUG FIX: Fixed an issue where intervals weren't being set correctly. This now supports all intervals, for quarterly and biannually please use 3 month and 6 month in the recurring subscription fields respectively.
 * BUG FIX: Fixed an issue where non-expiring memberships would obtain an expiration date incorrectly.
 * REFACTOR: Minor improvements to the settings UI page to align with other Paid Memberships Pro gateways.
