@@ -1,31 +1,37 @@
-<p align="center"><a href="https://paystack.com/"><img src="https://raw.githubusercontent.com/PaystackHQ/wordpress-paid-membership-pro-paystack/assets/paidmembershipspro%20copy.png" alt="Paystack Paid Membership Pro"></a></p>
+![](pmpro-sample-banner.png)
 
-# Paystack Gateway for Paid Membership Pro
+# [Plugin Name](https://www.paidmembershipspro.com/add-ons/paystack-gateway/) #
 
-Welcome to the Paystack Gateway for Paid Membership Pro repository on GitHub.
+![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dy/paystack-gateway-paid-memberships-pro?style=flat-square) ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg?style=flat-square)
 
-The *Paystack Gateway for Paid Membership Pro* plugin allows Wordpress site owners from Nigeria and Ghana to accept payments from their customers via Paid Membership Pro.
+### Welcome to the Plugin Name GitHub Repository
+Add a description of the product here.
 
-Here you can browse the source, look at open issues and keep track of development. 
+For more information please visit [paidmembershipspro.com/add-ons/paystack-gateway/](https://www.paidmembershipspro.com/add-ons/paystack-gateway/)
 
-## Installation
+## Installation ##
+For detailed installation steps, visit the [documentation](https://www.paidmembershipspro.com/add-ons/paystack-gateway/) page.
 
-1. Install the [Paystack Gateway for Paid Membership Pro](https://wordpress.org/plugins/paystack-gateway-paid-memberships-pro/) via the Plugins section of your WordPress Dashboard.
-2. Go to the settings section of the plugin and enter your Public and Secret Keys which are available on your [Paystack Dashboard](https://dashboard.paystack.com/#/settings/developer).
+1. Download the current development ZIP file directly: `https://github.com/strangerstudios/repo-slug/archive/dev.zip`
 
-## Documentation
-* [Paystack Documentation](https://developers.paystack.co/v2.0/docs/)
-* [Paystack Helpdesk](https://paystack.com/help)
+**Please ensure that once installing this version of the plugin to remove `-dev` from the plugin's folder name.**
 
-## Support
-For bug reports and feature requests directly related to this plugin, please use the [issue tracker](https://github.com/PaystackHQ/plugin-paid-membership-pro/issues). 
+## Bugs ##
+If you find an issue/bug, let us know by [creating a detailed GitHub issue](https://github.com/strangerstudios/repo-slug/issues/new).
 
-For questions related to using the plugin, please post an inquiry to the plugin [support forum](https://wordpress.org/support/plugin/paystack-gateway-paid-memberships-pro).
+## Support ##
+This is a developer's portal for Plugin Name. We do not offer support on this channel. **Any support related questions should be directed to [paidmembershipspro.com/add-ons/paystack-gateway/](https://www.paidmembershipspro.com/add-ons/paystack-gateway/).**
 
-For general support or questions about your Paystack account, you can reach out by sending a message from [our website](https://paystack.com/contact).
+## Contributing to Plugin Name ##
+We encourage and welcome any contribution to Plugin Name. Please read the [guidelines for contributing](https://github.com/strangerstudios/paid-memberships-pro/blob/dev/.github/CONTRIBUTING.md) to this repository.
 
-## Community
-If you are a developer, please join our Developer Community on [Slack](https://slack.paystack.com).
+There are various **ways to the help development** of Plugin Name:
 
-## Contributing to Paystack Gateway for Paid Membership Pro
-If you have a patch or have stumbled upon an issue with the Paystack Gateway for Paid Membership Pro plugin, you can contribute this back to the code. Please read our [contributor guidelines](https://github.com/PaystackHQ/wordpress-paid-membership-pro-paystack/blob/master/CONTRIBUTING.md) for more information how you can do this.
+1. Report [bugs/issues](https://github.com/strangerstudios/repo-slug/issues/new) on GitHub.
+2. Work on any issues by submitting a Pull Request.
+
+Here are some ways for **non-developers to contribute** to Plugin Name:
+
+1. Translate Plugin Name into your own [language](https://www.paidmembershipspro.com/paid-memberships-pro-in-your-language/).
+2. [Purchase a paid membership](https://paidmembershipspro.com/pricing) to help fund ongoing development and bug fixes.
+3. Leave an honest review for [Plugin Name](https://wordpress.org/support/plugin/repo-slug/reviews/#new-post).

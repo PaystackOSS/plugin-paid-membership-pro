@@ -1,10 +1,10 @@
 === Paystack Gateway for Paid Membership Pro ===
-Contributors: paystack, kendysond, steveamaza, lukman008, andrewza, strangerstudios
+Contributors: paystack, kendysond, steveamaza, lukman008, andrewza, strangerstudios, paidmembershipspro
 Donate link: https://paystack.com/demo
 Tags: paid memberships pro, pmpro, paystack, gateway, credit card, Naira, payment
 Requires at least: 5.0
 Tested up to: 6.3
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
