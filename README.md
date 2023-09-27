@@ -1,4 +1,4 @@
-![](pmpro-paystack-banner.png)
+![](pmpro-paystack-banner.jpg)
 
 # [Paid Memberships Pro - Paystack Gateway](https://www.paidmembershipspro.com/add-ons/paystack-gateway/) #
 
