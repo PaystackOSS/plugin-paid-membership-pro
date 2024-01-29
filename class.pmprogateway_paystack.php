@@ -711,8 +711,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     if ( $pmpro_level->billing_amount > 0 ) {
 
                                         // Convert the PMPro cycle to match that of paystacks.
-                                        $obj = new self();
-                                        $interval = $obj->convert_interval_for_paystack( $pmpro_level->cycle_period );
+                                        $pmpro_paystack = new self();
+                                        $interval = $pmpro_paystack->convert_interval_for_paystack( $pmpro_level->cycle_period );
 
                                         // Biannual and quarterly conversion for special cases.
                                         if ( $pmpro_level->cycle_number == 3 && $pmpro_level->cycle_period == 'Month' ) {
