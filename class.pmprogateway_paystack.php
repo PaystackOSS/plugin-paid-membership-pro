@@ -1031,11 +1031,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             $update_array['startdate'] = sanitize_text_field( $sub_info->createdAt ); 
                             $update_array['billing_amount'] = (float) $sub_info->amount/100; // Get currency value
                             $update_array['cycle_period'] = $this->convert_interval_for_pmpro( $sub_info->plan->interval ); // Convert interval for PMPro format (which sanitizes it)
-                        } else {
-                        // Throw an error here.
+                            $subscription->set( $update_array );
                         }
-
-                        $subscription->set( $update_array );
                 }
 
                 /**
