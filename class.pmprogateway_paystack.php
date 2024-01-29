@@ -710,23 +710,11 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     // There's recurring settings, lets convert to Paystack intervals now.
                                     if ( $pmpro_level->billing_amount > 0 ) {
 
-                                        if ( $pmpro_level->cycle_period == 'Day' ) {
-                                            $interval = 'daily';
-                                        }
+                                        // Convert the PMPro cycle to match that of paystacks.
+                                        $obj = new self();
+                                        $interval = $obj->convert_interval_for_paystack( $pmpro_level->cycle_period );
 
-                                        if ( $pmpro_level->cycle_period == 'Week' ) {
-                                            $interval = 'weekly';
-                                        }
-
-                                        if ( $pmpro_level->cycle_period == 'Month' ) {
-                                            $interval = 'monthly';
-                                        }
-                                       
-                                        if ( $pmpro_level->cycle_period == 'Year' ) {
-                                            $interval = 'annually';
-                                        }
-
-                                        // Biannual and quarterly conversion.
+                                        // Biannual and quarterly conversion for special cases.
                                         if ( $pmpro_level->cycle_number == 3 && $pmpro_level->cycle_period == 'Month' ) {
                                             $interval = 'quarterly';
                                         }
@@ -780,7 +768,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                                         }
                                         $subscription_delay = get_option( 'pmpro_subscription_delay_' . $pmpro_level->id, 0 );
-                                        if($subscription_delay)
+                                        
                                         if ( ! is_numeric( $subscription_delay ) ) {
                                             $start_date = kkd_pmprosd_convert_date( $subscription_delay );
                                         } else {
@@ -805,14 +793,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             $token = $paystack_response->data->email_token;
                                             $morder->subscription_transaction_id = $subscription_code;
                                             $morder->subscription_token = $token;
-										
-                                           
-
                                         }
-
                                     }
-                                    //
-                                    // die();
 
                                     $custom_level = array(
                                             'user_id'           => $morder->user_id,
@@ -928,11 +910,11 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         print_r("No records were found with user - ". $user_id." level - ". $level_to_cancel);
                     }
                 }
-                function cancel(&$order, $update_status = true)
+                function cancel(&$order, $update_status = true )
                 {
                     $backtrace = self::get_caller_info();
                     $furtherbacktrace = wp_debug_backtrace_summary();
-
+                  
                     //no matter what happens below, we're going to cancel the order in our system
                     if ( $update_status ) {
                         $order->updateStatus( "cancelled" );
@@ -946,7 +928,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $key = pmpro_getOption("paystack_lsk");
 
                     }
-                    if ($order->subscription_transaction_id != "") {
+
+                    if ( $code != "") {
                         $paystack_url = 'https://api.paystack.co/subscription/' . $code;
                        
                         $headers = array(
@@ -955,7 +938,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $args = array(
                             'headers' => $headers,
                             'timeout' => 60,
-                            'user-agent' =>  'Wordpress/ '. $backtrace . " ". $furtherbacktrace
                         );
                         
                         $request = wp_remote_get($paystack_url, $args);
@@ -977,18 +959,147 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     'body'      => json_encode($body),
                                     'headers'   => $headers,
                                     'timeout'   => 60,
-                                    'user-agent' =>  'Wordpress/ '. $backtrace . " ". $furtherbacktrace
                                 );
 
                                 $request = wp_remote_post($paystack_url, $args);
-                                // print_r($request);
-                                if (!is_wp_error($request)) {
-                                    $paystack_response = json_decode(wp_remote_retrieve_body($request));
+
+                                if ( ! is_wp_error( $request ) ) {
+                                    return true;
+                                } else {
+                                    return false; // There was an error cancelling for some reason.
                                 }
                             }
                         }
                     }
+                    return true;
                 }
+
+                /// Used for updating subscription stuff.
+                public function update_subscription_info( $subscription ) {
+                        $subscription_id = $subscription->get_subscription_transaction_id();
+                        $backtrace = self::get_caller_info();
+                        $furtherbacktrace = wp_debug_backtrace_summary();
+
+                        $mode = pmpro_getOption("gateway_environment");
+                        if ( $mode == "sandbox" ) {
+                            $key = pmpro_getOption("paystack_tsk");
+                            
+                        } else {
+                            $key = pmpro_getOption("paystack_lsk");
+                        }
+
+                        $paystack_url = 'https://api.paystack.co/subscription/' . $subscription_id;
+                       
+                        $headers = array(
+                            'Authorization' => 'Bearer ' . $key
+                        );
+
+                        $args = array(
+                            'headers' => $headers,
+                            'timeout' => 60,
+                        );
+                        
+                        $request = wp_remote_get( $paystack_url, $args );
+
+                        // Request is okay, so let's get the data now and update what we need to.
+                        if ( ! is_wp_error( $request ) && 200 == wp_remote_retrieve_response_code( $request ) ) {
+                            $update_array = array();
+
+                            $response = json_decode( wp_remote_retrieve_body( $request ) );
+                            $sub_info = $response->data;
+
+                            // The response status isn't active, so we're most likely already cancelled.
+                            if ( $sub_info->status !== 'active' ) {
+                                $update_array['status'] = 'cancelled'; // Does it 
+                            } else {
+                                $update_array['status'] = 'active';
+                            }
+                            
+
+                            // Let's make sure the cycle_numbers are correctly set based on the interval from Paystack.
+                            switch( $sub_info->plan->interval ) {
+                                case 'quarterly':
+                                    $update_array['cycle_number'] = 3;
+                                    break;
+                                case 'biannually':
+                                    $update_array['cycle_number'] = 6;
+                                    break;
+                            }
+
+                            // Update the subscription.
+                            $update_array['next_payment_date'] = sanitize_text_field( $sub_info->next_payment_date ); // [YYYY]-[MM]-[DD
+                            $update_array['startdate'] = sanitize_text_field( $sub_info->createdAt ); 
+                            $update_array['billing_amount'] = (float) $sub_info->amount/100; // Get currency value
+                            $update_array['cycle_period'] = $this->convert_interval_for_pmpro( $sub_info->plan->interval ); // Convert interval for PMPro format (which sanitizes it)
+                        } else {
+                        // Throw an error here.
+                        }
+
+                        $subscription->set( $update_array );
+                }
+
+                /**
+                 * Undocumented function
+                 *
+                 * @param string $interval The pmpro paystack
+                 * @return string $interval The required interval for PayStack to recognize.
+                 */
+                function convert_interval_for_paystack( $interval ) {
+
+                    $interval = strtolower( $interval );
+
+                    switch( $interval ) {
+                        case 'day':
+                            $interval = 'daily';
+                            break;
+                        case 'week':
+                            $interval = 'weekly';
+                            break;
+                        case 'month':
+                            $interval = 'monthly';
+                            break;
+                        case 'year':
+                            $interval = 'annually';
+                            break;
+                        default:
+                            $interval = 'monthly';
+                    }
+
+                    return $interval;
+
+                }
+
+                function convert_interval_for_pmpro( $interval ) {
+
+                    $interval = strtolower( $interval );
+
+                    switch( $interval ) {
+                        case 'daily':
+                            $interval = 'Day';
+                            break;
+                        case 'weekly':
+                            $interval = 'Week';
+                            break;
+                        case 'monthly':
+                            $interval = 'Month';
+                            break;
+                        case 'annually':
+                            $interval = 'Year';
+                            break;
+                        case 'quarterly':
+                            $interval = 'Month';
+                            break;
+                        case 'biannually':
+                            $interval = 'Month';
+                            break;
+                        default:
+                            $interval = 'Month';
+                    }
+
+                    return $interval;
+
+                }
+
                 function get_caller_info() {
                     $c = '';
                     $file = '';
