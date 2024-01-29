@@ -1069,6 +1069,12 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                 }
 
+                /**
+                 * Convert Paystack's intervals for PMPro's format.
+                 *
+                 * @param string $interval The received Paystack interval (i.e. Weekly, Monthly etc )
+                 * @return string $interval The converted interval for PMPro.
+                 */
                 function convert_interval_for_pmpro( $interval ) {
 
                     $interval = strtolower( $interval );
