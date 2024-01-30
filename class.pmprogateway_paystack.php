@@ -1002,10 +1002,15 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $request = wp_remote_get( $paystack_url, $args );
 
                         // Request is okay, so let's get the data now and update what we need to.
-                        if ( ! is_wp_error( $request ) && 200 == wp_remote_retrieve_response_code( $request ) ) {
-                            $update_array = array();
-
+                        if ( ! is_wp_error( $request ) ) {
                             $response = json_decode( wp_remote_retrieve_body( $request ) );
+
+                            if ( 200 !== wp_remote_retrieve_response_code( $request ) )  {
+                                // Throw an error here from the API
+                               return esc_html__( sprintf( 'Paystack error: %s', $response->message ), 'paystack-gateway-paid-memberships-pro' );
+                            }
+                            
+                            $update_array = array();
                             $sub_info = $response->data;
 
                             // The response status isn't active, so we're most likely already cancelled.
@@ -1032,6 +1037,8 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             $update_array['billing_amount'] = (float) $sub_info->amount/100; // Get currency value
                             $update_array['cycle_period'] = $this->convert_interval_for_pmpro( $sub_info->plan->interval ); // Convert interval for PMPro format (which sanitizes it)
                             $subscription->set( $update_array );
+                        } else {
+                            return esc_html__( 'There was an error communicating with Paystack. Please confirm your connectivity and API details and try again.', 'paystack-gateway-paid-memberships-pro' );
                         }
                 }
 
