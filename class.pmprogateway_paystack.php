@@ -316,6 +316,25 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 }
 
                 /**
+                 * Check whether or not a gateway supports a specific feature.
+                 *
+                 * @param string $feature The feature we need to check if it is supported.
+                 * @return string|boolean $supports In some cases, we may need to return strings for the feature or a boolean value if it's supported or not.
+                 */
+                public static function supports( $feature ) {
+                    $supports = array(
+                        'subscription_sync' => true,
+                        'payment_method_updates' => false
+                    );
+
+                    if ( empty( $supports[$feature] ) ) {
+                        return false;
+                    }
+
+			        return $supports[$feature];
+		        }
+                
+                /**
                  * Get a list of payment options that the Paystack gateway needs/supports.
                  */
                 static function getGatewayOptions()
