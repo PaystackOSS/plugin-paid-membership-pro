@@ -627,10 +627,20 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                         $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time("timestamp"))) . "'";
 
+                        // get discount code     (NOTE: but discount_code isn't set here. How to handle discount codes for PayPal Standard?)
+                        $morder->getDiscountCode();
+                        if ( ! empty( $morder->discount_code ) ) {
+                            // update membership level
+                            $morder->getMembershipLevel( true );
+                            $discount_code_id = $morder->discount_code->id;
+                        } else {
+                            $discount_code_id = '';
+                        }
+                        
                         $custom_level = array(
                             'user_id'           => $morder->user_id,
                             'membership_id'     => $morder->memberhsip_level->id,
-                            'code_id'           => '',
+                            'code_id'           => $discount_code_id,
                             'initial_payment'   => $morder->memberhsip_level->initial_payment,
                             'billing_amount'    => $morder->memberhsip_level->billing_amount,
                             'cycle_number'      => $morder->memberhsip_level->cycle_number,
@@ -842,10 +852,20 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                                     }
 
+                                    // get discount code     (NOTE: but discount_code isn't set here. How to handle discount codes for PayPal Standard?)
+                                    $morder->getDiscountCode();
+                                    if ( ! empty( $morder->discount_code ) ) {
+                                        // update membership level
+                                        $morder->getMembershipLevel( true );
+                                        $discount_code_id = $morder->discount_code->id;
+                                    } else {
+                                        $discount_code_id = '';
+                                    }
+
                                     $custom_level = array(
                                             'user_id'           => $morder->user_id,
                                             'membership_id'     => $morder->membership_level->id,
-                                            'code_id'           => '',
+                                            'code_id'           => $discount_code_id,
                                             'initial_payment'   => $morder->membership_level->initial_payment,
                                             'billing_amount'    => $morder->membership_level->billing_amount,
                                             'cycle_number'      => $morder->membership_level->cycle_number,
