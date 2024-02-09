@@ -309,7 +309,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         self::renewpayment($event);
                     case 'invoice.update':
                         self::renewpayment($event);
-                  
                     }
                     http_response_code(200);
                     exit();
@@ -437,25 +436,56 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 /**
                  * Instead of change membership levels, send users to Paystack payment page.
                  */
-                static function pmpro_checkout_before_change_membership_level($user_id, $morder)
-                {
+                static function pmpro_checkout_before_change_membership_level( $user_id, $morder ) {
                     global $wpdb, $discount_code_id;
 
                     //if no order, no need to pay
-                    if (empty($morder)) {
+                    if ( empty( $morder  )) {
                         return;
                     }
-                    if (empty($morder->code))
+
+                    if ( empty( $morder->code ) ) {
                         $morder->code = $morder->getRandomCode();
+                    }
 
                     $morder->payment_type = "paystack";
                     $morder->status = "pending";
                     $morder->user_id = $user_id;
                     $morder->saveOrder();
 
-                    //save discount code use
-                    if (!empty($discount_code_id))
-                        $wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . $discount_code_id . "', '" . $user_id . "', '" . $morder->id . "', now())");
+                    // Try to get the discount_code from a query param.
+                    if ( empty( $discount_code_id ) ) {
+                        // PMPro 3.0+
+                        if ( isset( $_REQUEST['pmpro_discount_code'] ) ) {
+                            $discount_code = sanitize_text_field( $_REQUEST['pmpro_discount_code'] );
+                        }
+
+                        // PMPro < 3.0
+                        if ( isset( $_REQUEST['discount_code'] ) ) {
+                            $discount_code = sanitize_text_field( $_REQUEST['discount_code'] );
+                        }
+                    }
+                    // if global is empty but query is available. PMPro 3.0
+                    if ( empty( $discount_code_id ) && ! empty( $discount_code ) ) {
+                        $discount_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql( $discount_code ) . "'" );
+                    }
+
+                    // save discount code use
+                    if ( ! empty( $discount_code_id ) ) {
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "INSERT INTO $wpdb->pmpro_discount_codes_uses 
+                                (code_id, user_id, order_id, timestamp) 
+                                VALUES( %d , %d, %d, %s )",
+                                $discount_code_id,
+                                $user_id,
+                                $morder->id,
+                                current_time( 'mysql' )
+                            )
+                        );
+                    }
+
+                    do_action("pmpro_before_send_to_paystack", $user_id, $morder);
 
                     $morder->Gateway->sendToPaystack($morder);
                 }
@@ -593,21 +623,21 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $morder->Email = $email;
                         $pmpro_level = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_membership_levels WHERE id = '" . (int)$morder->membership_id . "' LIMIT 1");
                         $pmpro_level = apply_filters("pmpro_checkout_level", $pmpro_level);
-                        $startdate = apply_filters("pmpro_checkout_start_date", "'" . current_time("mysql") . "'", $morder->user_id, $pmpro_level);
+	                    $startdate = apply_filters( 'pmpro_checkout_start_date', "'" . current_time( 'mysql' ) . "'", $morder->user_id, $morder->membership_level );
 
-                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
+                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time("timestamp"))) . "'";
 
                         $custom_level = array(
                             'user_id'           => $morder->user_id,
-                            'membership_id'     => $pmpro_level->id,
+                            'membership_id'     => $morder->memberhsip_level->id,
                             'code_id'           => '',
-                            'initial_payment'   => $pmpro_level->initial_payment,
-                            'billing_amount'    => $pmpro_level->billing_amount,
-                            'cycle_number'      => $pmpro_level->cycle_number,
-                            'cycle_period'      => $pmpro_level->cycle_period,
-                            'billing_limit'     => $pmpro_level->billing_limit,
-                            'trial_amount'      => $pmpro_level->trial_amount,
-                            'trial_limit'       => $pmpro_level->trial_limit,
+                            'initial_payment'   => $morder->memberhsip_level->initial_payment,
+                            'billing_amount'    => $morder->memberhsip_level->billing_amount,
+                            'cycle_number'      => $morder->memberhsip_level->cycle_number,
+                            'cycle_period'      => $morder->memberhsip_level->cycle_period,
+                            'billing_limit'     => $morder->memberhsip_level->billing_limit,
+                            'trial_amount'      => $morder->memberhsip_level->trial_amount,
+                            'trial_limit'       => $morder->memberhsip_level->trial_limit,
                             'startdate'         => $startdate,
                             'enddate'           => $enddate
                         );
@@ -811,20 +841,18 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         }
 
                                     }
-                                    //
-                                    // die();
 
                                     $custom_level = array(
                                             'user_id'           => $morder->user_id,
-                                            'membership_id'     => $pmpro_level->id,
+                                            'membership_id'     => $morder->membership_level->id,
                                             'code_id'           => '',
-                                            'initial_payment'   => $pmpro_level->initial_payment,
-                                            'billing_amount'    => $pmpro_level->billing_amount,
-                                            'cycle_number'      => $pmpro_level->cycle_number,
-                                            'cycle_period'      => $pmpro_level->cycle_period,
-                                            'billing_limit'     => $pmpro_level->billing_limit,
-                                            'trial_amount'      => $pmpro_level->trial_amount,
-                                            'trial_limit'       => $pmpro_level->trial_limit,
+                                            'initial_payment'   => $morder->membership_level->initial_payment,
+                                            'billing_amount'    => $morder->membership_level->billing_amount,
+                                            'cycle_number'      => $morder->membership_level->cycle_number,
+                                            'cycle_period'      => $morder->membership_level->cycle_period,
+                                            'billing_limit'     => $morder->membership_level->billing_limit,
+                                            'trial_amount'      => $morder->membership_level->trial_amount,
+                                            'trial_limit'       => $morder->membership_level->trial_limit,
                                             'startdate'         => $startdate,
                                             'enddate'           => $enddate
                                         );
@@ -833,7 +861,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         $_REQUEST['cancel_membership'] = false; // Do NOT cancel gateway subscription
 
                                         if (pmpro_changeMembershipLevel($custom_level, $morder->user_id, 'changed')) {
-                                            $morder->membership_id = $pmpro_level->id;
+                                            $morder->membership_id = $morder->membership_level->id;
                                             $morder->payment_transaction_id = $_REQUEST['trxref'];
                                             $morder->status = "success";
                                             $morder->saveOrder();
