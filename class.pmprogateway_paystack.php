@@ -625,8 +625,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $pmpro_level = apply_filters("pmpro_checkout_level", $pmpro_level);
 	                    $startdate = apply_filters( 'pmpro_checkout_start_date', "'" . current_time( 'mysql' ) . "'", $morder->user_id, $morder->membership_level );
 
-                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time("timestamp"))) . "'";
-
                         // get discount code     (NOTE: but discount_code isn't set here. How to handle discount codes for PayPal Standard?)
                         $morder->getDiscountCode();
                         if ( ! empty( $morder->discount_code ) ) {
@@ -635,6 +633,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             $discount_code_id = $morder->discount_code->id;
                         } else {
                             $discount_code_id = '';
+                        }
+
+                        //fix expiration date
+                        if ( ! empty( $morder->membership_level->expiration_number ) ) {
+                            $enddate = "'" . date_i18n( "Y-m-d", strtotime( "+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time( "timestamp" ) ) ) . "'";
+                        } else {
+                            $enddate = "NULL";
                         }
                         
                         $custom_level = array(
@@ -695,7 +700,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $_REQUEST['trxref'] = $reference;
                     }
                    
-
                     if (empty($pmpro_invoice)) {
                         $morder =  new MemberOrder($_REQUEST['trxref']);
                         // $morder = new MemberOrder();
@@ -737,15 +741,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     $pstk_logger = new pmpro_paystack_plugin_tracker('pm-pro',$pk);
                                     $pstk_logger->log_transaction_success($_REQUEST['trxref']);
 									do_action('pmpro_after_checkout', $morder->user_id, $morder);
-                                    //--------------------------------------------------
-                                    
-                                    // Let's make sure we're setting an expiration date if we've set one.
-                                    if ( ! empty( $pmpro_level->expiration_number ) ) {
-                                        $enddate =  "'" . date( "Y-m-d H:i:00", strtotime( "+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time( 'timestamp' ) ) ) . "'";
-                                    } else {
-                                        $enddate = "0000-00-00 00:00:00";
-                                    }
-
 
                                     // There's recurring settings, lets convert to Paystack intervals now.
                                     if ( $pmpro_level->billing_amount > 0 ) {
@@ -845,9 +840,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             $token = $paystack_response->data->email_token;
                                             $morder->subscription_transaction_id = $subscription_code;
                                             $morder->subscription_token = $token;
-										
-                                           
-
                                         }
 
                                     }
@@ -860,6 +852,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         $discount_code_id = $morder->discount_code->id;
                                     } else {
                                         $discount_code_id = '';
+                                    }
+
+                                    // Get the expiration date.
+                                    if ( ! empty( $morder->membership_level->expiration_number ) ) {
+                                        $enddate = "'" . date_i18n( "Y-m-d", strtotime( "+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time( "timestamp" ) ) ) . "'";
+                                    } else {
+                                        $enddate = "NULL";
                                     }
 
                                     $custom_level = array(
