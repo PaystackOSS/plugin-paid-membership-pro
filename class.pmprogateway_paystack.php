@@ -762,22 +762,22 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 									do_action('pmpro_after_checkout', $morder->user_id, $morder);
 
                                     // There's recurring settings, lets convert to Paystack intervals now.
-                                    if ( $pmpro_level->billing_amount > 0 ) {
+                                    if ( $morder->membership_level->billing_amount > 0 ) {
 
                                         // Convert the PMPro cycle to match that of paystacks.
                                         $pmpro_paystack = new self();
                                         $interval = $pmpro_paystack->convert_interval_for_paystack( $pmpro_level->cycle_period );
 
                                         // Biannual and quarterly conversion for special cases.
-                                        if ( $pmpro_level->cycle_number == 3 && $pmpro_level->cycle_period == 'Month' ) {
+                                        if ( $morder->membership_level->cycle_number == 3 && $morder->membership_level->cycle_period == 'Month' ) {
                                             $interval = 'quarterly';
                                         }
 
-                                        if ( $pmpro_level->cycle_number == 6 && $pmpro_level->cycle_period == 'Month' ) {
+                                        if ( $morder->membership_level->cycle_number == 6 && $morder->membership_level->cycle_period == 'Month' ) {
                                             $interval = 'biannually';
                                         }
 
-                                        $amount = $pmpro_level->billing_amount;
+                                        $amount = $morder->membership_level->billing_amount;
                                         $koboamount = $amount*100;
                                         //Create Plan
                                         $paystack_url = 'https://api.paystack.co/plan';
@@ -821,12 +821,17 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             }
 
                                         }
+                                        
                                         $subscription_delay = get_option( 'pmpro_subscription_delay_' . $pmpro_level->id, 0 );
                                         
-                                        if ( ! is_numeric( $subscription_delay ) ) {
-                                            $start_date = kkd_pmprosd_convert_date( $subscription_delay );
+                                        if ( $subscription_delay ) {
+                                                if ( ! is_numeric( $subscription_delay ) ) {
+                                                $start_date = kkd_pmprosd_convert_date( $subscription_delay );
+                                            } else {
+                                                $start_date = date( 'Y-m-d', strtotime( '+ ' . intval( $subscription_delay ) . ' Days', current_time( 'timestamp' ) ) );
+                                            }
                                         } else {
-                                            $start_date = date( 'Y-m-d', strtotime( '+ ' . intval( $subscription_delay ) . ' Days', current_time( 'timestamp' ) ) );
+                                            $start_date = current_time( 'mysql' );
                                         }
                                         
                                         $body = array(
@@ -843,10 +848,12 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         $request = wp_remote_post($subscription_url, $args);
                                         if (!is_wp_error($request)) {
                                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
-                                            $subscription_code = $paystack_response->data->subscription_code;
-                                            $token = $paystack_response->data->email_token;
-                                            $morder->subscription_transaction_id = $subscription_code;
-                                            $morder->subscription_token = $token;
+                                            if ( isset( $paystack_response->data->status ) && 'success' == $paystack_response->data->status ) {
+                                                $subscription_code = $paystack_response->data->subscription_code;
+                                                $token = $paystack_response->data->email_token;
+                                                $morder->subscription_transaction_id = $subscription_code;
+                                                $morder->subscription_token = $token;
+                                            }
                                         }
                                     }
 
