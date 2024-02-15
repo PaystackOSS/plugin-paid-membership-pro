@@ -2,9 +2,9 @@
 Contributors: paystack, kendysond, steveamaza, lukman008, andrewza, strangerstudios, paidmembershipspro
 Donate link: https://paystack.com/demo
 Tags: paid memberships pro, pmpro, paystack, gateway, credit card, Naira, payment
-Requires at least: 5.0
-Tested up to: 6.3
-Stable tag: 1.7.1
+Requires at least: 5.2
+Tested up to: 6.4
+Stable tag: 1.7.2
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -73,6 +73,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/strangerstudi
 1. The slick Paystack settings panel.
 
 == Changelog ==
+= 1.7.2 - 2024-02-15 =
+* ENHANCEMENT: Added support for Paid Memberships Pro 3.0+ subscriptions.
+* BUG FIX: Fixed an issue where discount codes were not reflecting on Paid Memberships Pro side.
+
 = 1.7.1 - 2023-09-13 =
 * SECURITY: Improved security to the webhook handler, this now checks for the presence of the Paystack signature header before processing the request.
 * ENHANCEMENT: Only allow card checkout for recurring subscriptions as other payment options don't allow subscriptions.
