@@ -1,0 +1,100 @@
+# Copyright (C) 2024 Paid Memberships Pro, Paystack
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Paystack Gateway for Paid Memberships Pro 1.7.2\n"
+"Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
+"Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
+"Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2024-02-15T10:17:37+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.10.0\n"
+"X-Domain: paystack-gateway-paid-memberships-pro\n"
+
+#. Plugin Name of the plugin
+#: class.pmprogateway_paystack.php
+msgid "Paystack Gateway for Paid Memberships Pro"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: class.pmprogateway_paystack.php
+msgid "https://www.paidmembershipspro.com/add-ons/paystack-gateway/"
+msgstr ""
+
+#. Description of the plugin
+#: class.pmprogateway_paystack.php
+msgid "Plugin to add Paystack payment gateway into Paid Memberships Pro"
+msgstr ""
+
+#. Author of the plugin
+#: class.pmprogateway_paystack.php
+msgid "Paid Memberships Pro, Paystack"
+msgstr ""
+
+#. Author URI of the plugin
+#: class.pmprogateway_paystack.php
+msgid "https://www.paidmembershipspro.com"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:108
+msgid "Settings"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:122
+msgid "Check Out with Paystack"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:122
+msgid "Submit and Confirm"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:135
+msgid "Paystack"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:377
+msgid "Test Secret Key"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:385
+msgid "Test Public Key"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:393
+msgid "Live Secret Key"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:401
+msgid "Live Public Key"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:409
+msgid "Webhook"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:412
+msgid "To fully integrate with Paystack, be sure to use the following for your Webhook URL to"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:930
+msgid "Account"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:931
+msgid "Order"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:932
+msgid "Membership Level"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:933
+msgid "Amount Paid"
+msgstr ""
+
+#: class.pmprogateway_paystack.php:1119
+msgid "There was an error communicating with Paystack. Please confirm your connectivity and API details and try again."
+msgstr ""

@@ -1,19 +1,20 @@
 <?php
 /**
  * Plugin Name: Paystack Gateway for Paid Memberships Pro
- * Plugin URI: https://paystack.com
+ * Plugin URI: https://www.paidmembershipspro.com/add-ons/paystack-gateway/
  * Description: Plugin to add Paystack payment gateway into Paid Memberships Pro
- * Version: 1.7.0
- * Author: Paystack
+ * Version: 1.7.2
+ * Author: Paid Memberships Pro, Paystack
+ * Author URI: https://www.paidmembershipspro.com
  * License: GPLv2 or later
+ * Text Domain: paystack-gateway-paid-memberships-pro
+ * Domain Path: /languages
  */
 
 include_once plugin_dir_path(__FILE__) . 'class-paystack-plugin-tracker.php';
 defined('ABSPATH') or die('No script kiddies please!');
 if (!function_exists('Paystack_Pmp_Gateway_load')) {
     add_action('plugins_loaded', 'Paystack_Pmp_Gateway_load', 20);
-
-    DEFINE('KKD_PAYSTACKPMP', "paystack-paidmembershipspro");
 
     function Paystack_Pmp_Gateway_load()
     {
@@ -53,12 +54,19 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 {
                     //make sure Paystack is a gateway option
                     add_filter('pmpro_gateways', array('PMProGateway_Paystack', 'pmpro_gateways'));
+                    add_action( 'plugins_loaded', array('PMProGateway_Paystack', 'pmpro_paystack_load_textdomain' ) );
+
 
                     //add fields to payment settings
                     add_filter('pmpro_payment_options', array('PMProGateway_Paystack', 'pmpro_payment_options'));
                     add_filter('pmpro_payment_option_fields', array('PMProGateway_Paystack', 'pmpro_payment_option_fields'), 10, 2);
+                    add_action('wp_ajax_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'pmpro_paystack_ipn'));
+                    add_action('wp_ajax_nopriv_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'pmpro_paystack_ipn'));
+
+                    // Keeping the deprecated action for backwards compatibility.
                     add_action('wp_ajax_kkd_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'kkd_pmpro_paystack_ipn'));
                     add_action('wp_ajax_nopriv_kkd_pmpro_paystack_ipn', array('PMProGateway_Paystack', 'kkd_pmpro_paystack_ipn'));
+
                     //code to add at checkout
                     $gateway = pmpro_getGateway();
                     if ($gateway == "paystack") {
@@ -68,11 +76,21 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         add_filter('pmpro_checkout_before_change_membership_level', array('PMProGateway_Paystack', 'pmpro_checkout_before_change_membership_level'), 10, 2);
 
                         add_filter('pmpro_gateways_with_pending_status', array('PMProGateway_Paystack', 'pmpro_gateways_with_pending_status'));
-                        add_filter('pmpro_pages_shortcode_checkout', array('PMProGateway_Paystack', 'pmpro_pages_shortcode_checkout'), 20, 1);
+   
                         add_filter('pmpro_checkout_default_submit_button', array('PMProGateway_Paystack', 'pmpro_checkout_default_submit_button'));
                         // custom confirmation page
+
                         add_filter('pmpro_pages_shortcode_confirmation', array('PMProGateway_Paystack', 'pmpro_pages_shortcode_confirmation'), 20, 1);
                     }
+                }
+
+                /**
+                 * Enable localization for the plugin.
+                 *
+                 * @return void
+                 */
+                static function pmpro_paystack_load_textdomain() {
+	                load_plugin_textdomain( 'paystack-gateway-paid-memberships-pro', false, basename( dirname( __FILE__ ) ) . '/languages' );
                 }
 
                 /**
@@ -87,7 +105,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     }
 
                     if ($file == $this_plugin) {
-                        $settings_link = '<a href="'.admin_url('admin.php?page=pmpro-paymentsettings').'">'.__('Settings', KKD_PAYSTACKPMP).'</a>';
+                        $settings_link = '<a href="'.admin_url('admin.php?page=pmpro-paymentsettings').'">'.__('Settings', 'paystack-gateway-paid-memberships-pro').'</a>';
                         array_unshift($links, $settings_link);
                     }
 
@@ -101,7 +119,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     ?>
                     <span id="pmpro_submit_span">
                     <input type="hidden" name="submit-checkout" value="1" />
-                    <input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if ($pmpro_requirebilling) { _e('Check Out with Paystack', 'pmpro'); } else { _e('Submit and Confirm', 'pmpro');}?> &raquo;" />
+                    <input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if ($pmpro_requirebilling) { _e('Check Out with Paystack', 'paystack-gateway-paid-memberships-pro'); } else { _e('Submit and Confirm', 'paystack-gateway-paid-memberships-pro');}?> &raquo;" />
                     </span>
                     <?php
 
@@ -114,7 +132,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 static function pmpro_gateways($gateways)
                 {
                     if (empty($gateways['paystack'])) {
-                        $gateways = array_slice($gateways, 0, 1) + array("paystack" => __('Paystack', KKD_PAYSTACKPMP)) + array_slice($gateways, 1);
+                        $gateways = array_slice($gateways, 0, 1) + array("paystack" => __('Paystack', 'paystack-gateway-paid-memberships-pro')) + array_slice($gateways, 1);
                     }
                     return $gateways;
                 }
@@ -211,21 +229,47 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     
                     return $set_date;
                 }
-                function kkd_pmpro_paystack_ipn()
-                {
+
+                /**
+                 * Wrapper function for newly named function instead to be more inline with PMPro naming conventions.
+                 * DEPRECATED use pmpro_paystack_ipn instead.
+                 * @since 1.0
+                 */
+                static function kkd_pmpro_paystack_ipn() {
+                    pmpro_paystack_ipn();
+                }
+
+                /**
+                 * Webhook handler for Paystack.
+                 * @since 1.0 (Renamed in 1.7.1)
+                 */
+                static function pmpro_paystack_ipn() {
                     global $wpdb;
-                    // if ((strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' ) || !array_key_exists('HTTP_X_PAYSTACK_SIGNATURE', $_SERVER) ) {
-                    //     exit();
-                    // }
-                    define('SHORTINIT', true);
+                    
+                    // Let's make sure the request came from Paystack by checking the secret key
+                    if ( ( strtoupper( $_SERVER['REQUEST_METHOD'] ) != 'POST' ) || ! array_key_exists( 'HTTP_X_PAYSTACK_SIGNATURE', $_SERVER ) ) {
+                        exit;
+                    }
+
+                    // Get the relevant secret key based on gateway environment.
+                    $mode = pmpro_getOption("gateway_environment");
+                    if ($mode == 'sandbox') {
+                        $secret_key = pmpro_getOption("paystack_tsk");
+                    } else {
+                        $secret_key = pmpro_getOption("paystack_lsk");
+                    }
+                    
+
                     $input = @file_get_contents("php://input");
+
+                    // The Paystack signature doesn't match the secret key, let's bail.
+                    if ( $_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] !== hash_hmac('sha512', $input, $secret_key ) ) {
+                        exit;
+                    }
+
                     $event = json_decode($input);
-                    // echo "<pre>";
-                    // print_r($event);
-                    // if(!$_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] || ($_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] !== hash_hmac('sha512', $input, paystack_recurrent_billing_get_secret_key()))){
-                    //   exit();
-                    // }
-                    switch($event->event){
+
+                    switch( $event->event ){
                     case 'subscription.create':
 
                         break;
@@ -235,13 +279,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $subscription_code = $event->data->subscription_code;
                         $email = $event->data->customer->email;
                         $morder->Email = $email;
-                        $users_row = $wpdb->get_row( "SELECT ID, display_name FROM $wpdb->users WHERE user_email = '" . $email. "' LIMIT 1" );
+                        $users_row = $wpdb->get_row( "SELECT ID, display_name FROM $wpdb->users WHERE user_email = '" . esc_sql( $email ). "' LIMIT 1" );
                         if ( ! empty( $users_row )  ) {
                             $user_id = $users_row->ID;
                             $user = get_userdata($user_id);
                             $user->membership_level = pmpro_getMembershipLevelForUser($user_id);
                         }
-                        if (empty($user)) {
+                        if ( empty( $user ) ) {
                             print_r('Could not get user');
                             exit();
                         }
@@ -265,12 +309,30 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         self::renewpayment($event);
                     case 'invoice.update':
                         self::renewpayment($event);
-                  
                     }
                     http_response_code(200);
                     exit();
                 }
 
+                /**
+                 * Check whether or not a gateway supports a specific feature.
+                 *
+                 * @param string $feature The feature we need to check if it is supported.
+                 * @return string|boolean $supports In some cases, we may need to return strings for the feature or a boolean value if it's supported or not.
+                 */
+                public static function supports( $feature ) {
+                    $supports = array(
+                        'subscription_sync' => true,
+                        'payment_method_updates' => false
+                    );
+
+                    if ( empty( $supports[$feature] ) ) {
+                        return false;
+                    }
+
+			        return $supports[$feature];
+		        }
+                
                 /**
                  * Get a list of payment options that the Paystack gateway needs/supports.
                  */
@@ -310,23 +372,9 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 static function pmpro_payment_option_fields($values, $gateway)
                 {
                     ?>
-                    <tr class="pmpro_settings_divider gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
-                        <td colspan="2">
-                            <?php _e('Paystack API Configuration', 'pmpro'); ?>
-                        </td>
-                    </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label><?php _e('Webhook', 'pmpro');?>:</label>
-                        </th>
-                        <td>
-                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL', 'pmpro');?> <pre><?php echo admin_url("admin-ajax.php") . "?action=kkd_pmpro_paystack_ipn";?></pre></p>
-
-                        </td>
-                    </tr>
-                    <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
-                        <th scope="row" valign="top">
-                            <label for="paystack_tsk"><?php _e('Test Secret Key', 'pmpro');?>:</label>
+                            <label for="paystack_tsk"><?php _e('Test Secret Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_tsk" name="paystack_tsk" size="60" value="<?php echo esc_attr($values['paystack_tsk'])?>" />
@@ -334,7 +382,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="paystack_tpk"><?php _e('Test Public Key', 'pmpro');?>:</label>
+                            <label for="paystack_tpk"><?php _e('Test Public Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_tpk" name="paystack_tpk" size="60" value="<?php echo esc_attr($values['paystack_tpk'])?>" />
@@ -342,7 +390,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="paystack_lsk"><?php _e('Live Secret Key', 'pmpro');?>:</label>
+                            <label for="paystack_lsk"><?php _e('Live Secret Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_lsk" name="paystack_lsk" size="60" value="<?php echo esc_attr($values['paystack_lsk'])?>" />
@@ -350,14 +398,21 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                     </tr>
                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="paystack_lpk"><?php _e('Live Public Key', 'pmpro');?>:</label>
+                            <label for="paystack_lpk"><?php _e('Live Public Key', 'paystack-gateway-paid-memberships-pro');?>:</label>
                         </th>
                         <td>
                             <input type="text" id="paystack_lpk" name="paystack_lpk" size="60" value="<?php echo esc_attr($values['paystack_lpk'])?>" />
                         </td>
                     </tr>
-                   
+                     <tr class="gateway gateway_paystack" <?php if($gateway != "paystack") { ?>style="display: none;"<?php } ?>>
+                        <th scope="row" valign="top">
+                            <label><?php _e('Webhook', 'paystack-gateway-paid-memberships-pro');?>:</label>
+                        </th>
+                        <td>
+                            <p><?php _e('To fully integrate with Paystack, be sure to use the following for your Webhook URL to', 'paystack-gateway-paid-memberships-pro');?><br/><code><?php echo admin_url("admin-ajax.php") . "?action=pmpro_paystack_ipn";?></code></p>
 
+                        </td>
+                    </tr>
                     <?php
                 }
 
@@ -400,25 +455,56 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 /**
                  * Instead of change membership levels, send users to Paystack payment page.
                  */
-                static function pmpro_checkout_before_change_membership_level($user_id, $morder)
-                {
+                static function pmpro_checkout_before_change_membership_level( $user_id, $morder ) {
                     global $wpdb, $discount_code_id;
 
                     //if no order, no need to pay
-                    if (empty($morder)) {
+                    if ( empty( $morder  )) {
                         return;
                     }
-                    if (empty($morder->code))
+
+                    if ( empty( $morder->code ) ) {
                         $morder->code = $morder->getRandomCode();
+                    }
 
                     $morder->payment_type = "paystack";
                     $morder->status = "pending";
                     $morder->user_id = $user_id;
                     $morder->saveOrder();
 
-                    //save discount code use
-                    if (!empty($discount_code_id))
-                        $wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . $discount_code_id . "', '" . $user_id . "', '" . $morder->id . "', now())");
+                    // Try to get the discount_code from a query param.
+                    if ( empty( $discount_code_id ) ) {
+                        // PMPro 3.0+
+                        if ( isset( $_REQUEST['pmpro_discount_code'] ) ) {
+                            $discount_code = sanitize_text_field( $_REQUEST['pmpro_discount_code'] );
+                        }
+
+                        // PMPro < 3.0
+                        if ( isset( $_REQUEST['discount_code'] ) ) {
+                            $discount_code = sanitize_text_field( $_REQUEST['discount_code'] );
+                        }
+                    }
+                    // if global is empty but query is available. PMPro 3.0
+                    if ( empty( $discount_code_id ) && ! empty( $discount_code ) ) {
+                        $discount_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql( $discount_code ) . "'" );
+                    }
+
+                    // save discount code use
+                    if ( ! empty( $discount_code_id ) ) {
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "INSERT INTO $wpdb->pmpro_discount_codes_uses 
+                                (code_id, user_id, order_id, timestamp) 
+                                VALUES( %d , %d, %d, %s )",
+                                $discount_code_id,
+                                $user_id,
+                                $morder->id,
+                                current_time( 'mysql' )
+                            )
+                        );
+                    }
+
+                    do_action("pmpro_before_send_to_paystack", $user_id, $morder);
 
                     $morder->Gateway->sendToPaystack($morder);
                 }
@@ -488,6 +574,13 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                 ), 'custom_filters' => array("recurring" => true))),
 
             );
+
+            // If the level is recurring only allow card payments for the subscription as other methods don't work.
+            $level = $order->getMembershipLevel();
+            if ( pmpro_isLevelRecurring( $level ) ) {
+                $body['channels'] = array( 'card' );
+            }
+
                     $args = array(
                         'body'      => json_encode($body),
                         'headers'   => $headers,
@@ -503,12 +596,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                             wp_redirect($url);
                             exit;
                         } else {
-                            $order->Gateway->delete($order);
                             wp_redirect(pmpro_url("checkout", "?level=" . $order->membership_level->id . "&error=" . $paystack_response->message));
                             exit();
                         }
                     } else {
-                        $order->Gateway->delete($order);
                         wp_redirect(pmpro_url("checkout", "?level=" . $order->membership_level->id . "&error=Failed"));
                         exit();
                     }
@@ -551,21 +642,36 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $morder->Email = $email;
                         $pmpro_level = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_membership_levels WHERE id = '" . (int)$morder->membership_id . "' LIMIT 1");
                         $pmpro_level = apply_filters("pmpro_checkout_level", $pmpro_level);
-                        $startdate = apply_filters("pmpro_checkout_start_date", "'" . current_time("mysql") . "'", $morder->user_id, $pmpro_level);
+	                    $startdate = apply_filters( 'pmpro_checkout_start_date', "'" . current_time( 'mysql' ) . "'", $morder->user_id, $morder->membership_level );
 
-                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
+                        // get discount code     (NOTE: but discount_code isn't set here. How to handle discount codes for PayPal Standard?)
+                        $morder->getDiscountCode();
+                        if ( ! empty( $morder->discount_code ) ) {
+                            // update membership level
+                            $morder->getMembershipLevel( true );
+                            $discount_code_id = $morder->discount_code->id;
+                        } else {
+                            $discount_code_id = '';
+                        }
 
+                        //fix expiration date
+                        if ( ! empty( $morder->membership_level->expiration_number ) ) {
+                            $enddate = "'" . date_i18n( "Y-m-d", strtotime( "+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time( "timestamp" ) ) ) . "'";
+                        } else {
+                            $enddate = "NULL";
+                        }
+                        
                         $custom_level = array(
                             'user_id'           => $morder->user_id,
-                            'membership_id'     => $pmpro_level->id,
-                            'code_id'           => '',
-                            'initial_payment'   => $pmpro_level->initial_payment,
-                            'billing_amount'    => $pmpro_level->billing_amount,
-                            'cycle_number'      => $pmpro_level->cycle_number,
-                            'cycle_period'      => $pmpro_level->cycle_period,
-                            'billing_limit'     => $pmpro_level->billing_limit,
-                            'trial_amount'      => $pmpro_level->trial_amount,
-                            'trial_limit'       => $pmpro_level->trial_limit,
+                            'membership_id'     => $morder->memberhsip_level->id,
+                            'code_id'           => $discount_code_id,
+                            'initial_payment'   => $morder->memberhsip_level->initial_payment,
+                            'billing_amount'    => $morder->memberhsip_level->billing_amount,
+                            'cycle_number'      => $morder->memberhsip_level->cycle_number,
+                            'cycle_period'      => $morder->memberhsip_level->cycle_period,
+                            'billing_limit'     => $morder->memberhsip_level->billing_limit,
+                            'trial_amount'      => $morder->memberhsip_level->trial_amount,
+                            'trial_limit'       => $morder->memberhsip_level->trial_limit,
                             'startdate'         => $startdate,
                             'enddate'           => $enddate
                         );
@@ -600,26 +706,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
 
                 }
 
-                static function pmpro_pages_shortcode_checkout($content)
-                {
-                    $morder = new MemberOrder();
-                    $found = $morder->getLastMemberOrder(get_current_user_id(), apply_filters("pmpro_confirmation_order_status", array("pending")));
-                    if ($found) {
-                        $morder->Gateway->delete($morder);
-                    }
-
-                    if (isset($_REQUEST['error'])) {
-                        global $pmpro_msg, $pmpro_msgt;
-
-                        $pmpro_msg = __("IMPORTANT: Something went wrong during the payment. Please try again later or contact the site owner to fix this issue.<br/>" . urldecode($_REQUEST['error']), "pmpro");
-                        $pmpro_msgt = "pmpro_error";
-
-                        $content = "<div id='pmpro_message' class='pmpro_message ". $pmpro_msgt . "'>" . $pmpro_msg . "</div>" . $content;
-                    }
-
-                    return $content;
-                }
-
                 /**
                  * Custom confirmation page
                  */
@@ -633,7 +719,6 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $_REQUEST['trxref'] = $reference;
                     }
                    
-
                     if (empty($pmpro_invoice)) {
                         $morder =  new MemberOrder($_REQUEST['trxref']);
                         // $morder = new MemberOrder();
@@ -675,47 +760,24 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     $pstk_logger = new pmpro_paystack_plugin_tracker('pm-pro',$pk);
                                     $pstk_logger->log_transaction_success($_REQUEST['trxref']);
 									do_action('pmpro_after_checkout', $morder->user_id, $morder);
-                                    //--------------------------------------------------
-                                    
-                                    if (strlen($morder->subscription_transaction_id) > 3) {
-                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $morder->subscription_transaction_id, current_time("timestamp"))) . "'";
 
-                                        // Override the previous calculation
-                                        $__date = date_create(date("Y-m-d H:i:s", current_time("timestamp")));
-                                        date_add($__date, date_interval_create_from_date_string("".$pmpro_level->cycle_number." ".$pmpro_level->cycle_period.""));
+                                    // There's recurring settings, lets convert to Paystack intervals now.
+                                    if ( $morder->membership_level->billing_amount > 0 ) {
 
-                                        $enddate = "'" . $__date->format("Y-m-d H:i:s") . "'";
-                                    } elseif (!empty($pmpro_level->expiration_number)) {
-                                        $enddate = "'" . date("Y-m-d", strtotime("+ " . $pmpro_level->expiration_number . " " . $pmpro_level->expiration_period, current_time("timestamp"))) . "'";
-                                    } else {
-                                        $enddate = "NULL";
-                                    }
-                                    if (($pmpro_level->cycle_number > 0) && ($pmpro_level->billing_amount > 0) && ($pmpro_level->cycle_period != "")) {
-                                        if ($pmpro_level->cycle_number < 10 && $pmpro_level->cycle_period == 'Day') {
-                                            $interval = 'weekly';
-                                        } elseif (($pmpro_level->cycle_number == 90) && ($pmpro_level->cycle_period == 'Day')) {
+                                        // Convert the PMPro cycle to match that of paystacks.
+                                        $pmpro_paystack = new self();
+                                        $interval = $pmpro_paystack->convert_interval_for_paystack( $pmpro_level->cycle_period );
+
+                                        // Biannual and quarterly conversion for special cases.
+                                        if ( $morder->membership_level->cycle_number == 3 && $morder->membership_level->cycle_period == 'Month' ) {
                                             $interval = 'quarterly';
                                         }
-                                        elseif (($pmpro_level->cycle_number == 180) && ($pmpro_level->cycle_period == 'Day')) {
+
+                                        if ( $morder->membership_level->cycle_number == 6 && $morder->membership_level->cycle_period == 'Month' ) {
                                             $interval = 'biannually';
-                                        }
-                                         elseif (($pmpro_level->cycle_number >= 10) && ($pmpro_level->cycle_period == 'Day')) {
-                                            $interval = 'monthly';
-                                        } elseif (($pmpro_level->cycle_number == 3) && ($pmpro_level->cycle_period == 'Month')) {
-                                            $interval = 'quarterly';
-                                        
-                                        }
-                                        elseif (($pmpro_level->cycle_number == 6) && ($pmpro_level->cycle_period == 'Month')) {
-                                            $interval = 'biannually';
-                                        
-                                        }
-                                        elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Month')) {
-                                            $interval = 'monthly';
-                                        } elseif (($pmpro_level->cycle_number > 0) && ($pmpro_level->cycle_period == 'Year')) {
-                                            $interval = 'annually';
                                         }
 
-                                        $amount = $pmpro_level->billing_amount;
+                                        $amount = $morder->membership_level->billing_amount;
                                         $koboamount = $amount*100;
                                         //Create Plan
                                         $paystack_url = 'https://api.paystack.co/plan';
@@ -759,12 +821,17 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                             }
 
                                         }
+                                        
                                         $subscription_delay = get_option( 'pmpro_subscription_delay_' . $pmpro_level->id, 0 );
-                                        if($subscription_delay)
-                                        if ( ! is_numeric( $subscription_delay ) ) {
-                                            $start_date = kkd_pmprosd_convert_date( $subscription_delay );
+                                        
+                                        if ( $subscription_delay ) {
+                                                if ( ! is_numeric( $subscription_delay ) ) {
+                                                $start_date = kkd_pmprosd_convert_date( $subscription_delay );
+                                            } else {
+                                                $start_date = date( 'Y-m-d', strtotime( '+ ' . intval( $subscription_delay ) . ' Days', current_time( 'timestamp' ) ) );
+                                            }
                                         } else {
-                                            $start_date = date( 'Y-m-d', strtotime( '+ ' . intval( $subscription_delay ) . ' Days', current_time( 'timestamp' ) ) );
+                                            $start_date = current_time( 'mysql' );
                                         }
                                         
                                         $body = array(
@@ -781,30 +848,43 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         $request = wp_remote_post($subscription_url, $args);
                                         if (!is_wp_error($request)) {
                                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
-                                            $subscription_code = $paystack_response->data->subscription_code;
-                                            $token = $paystack_response->data->email_token;
-                                            $morder->subscription_transaction_id = $subscription_code;
-                                            $morder->subscription_token = $token;
-										
-                                           
-
+                                            if ( isset( $paystack_response->data->status ) && 'success' == $paystack_response->data->status ) {
+                                                $subscription_code = $paystack_response->data->subscription_code;
+                                                $token = $paystack_response->data->email_token;
+                                                $morder->subscription_transaction_id = $subscription_code;
+                                                $morder->subscription_token = $token;
+                                            }
                                         }
-
                                     }
-                                    //
-                                    // die();
+
+                                    // get discount code     (NOTE: but discount_code isn't set here. How to handle discount codes for PayPal Standard?)
+                                    $morder->getDiscountCode();
+                                    if ( ! empty( $morder->discount_code ) ) {
+                                        // update membership level
+                                        $morder->getMembershipLevel( true );
+                                        $discount_code_id = $morder->discount_code->id;
+                                    } else {
+                                        $discount_code_id = '';
+                                    }
+
+                                    // Get the expiration date.
+                                    if ( ! empty( $morder->membership_level->expiration_number ) ) {
+                                        $enddate = "'" . date_i18n( "Y-m-d", strtotime( "+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time( "timestamp" ) ) ) . "'";
+                                    } else {
+                                        $enddate = "NULL";
+                                    }
 
                                     $custom_level = array(
                                             'user_id'           => $morder->user_id,
-                                            'membership_id'     => $pmpro_level->id,
-                                            'code_id'           => '',
-                                            'initial_payment'   => $pmpro_level->initial_payment,
-                                            'billing_amount'    => $pmpro_level->billing_amount,
-                                            'cycle_number'      => $pmpro_level->cycle_number,
-                                            'cycle_period'      => $pmpro_level->cycle_period,
-                                            'billing_limit'     => $pmpro_level->billing_limit,
-                                            'trial_amount'      => $pmpro_level->trial_amount,
-                                            'trial_limit'       => $pmpro_level->trial_limit,
+                                            'membership_id'     => $morder->membership_level->id,
+                                            'code_id'           => $discount_code_id,
+                                            'initial_payment'   => $morder->membership_level->initial_payment,
+                                            'billing_amount'    => $morder->membership_level->billing_amount,
+                                            'cycle_number'      => $morder->membership_level->cycle_number,
+                                            'cycle_period'      => $morder->membership_level->cycle_period,
+                                            'billing_limit'     => $morder->membership_level->billing_limit,
+                                            'trial_amount'      => $morder->membership_level->trial_amount,
+                                            'trial_limit'       => $morder->membership_level->trial_limit,
                                             'startdate'         => $startdate,
                                             'enddate'           => $enddate
                                         );
@@ -813,7 +893,7 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                         $_REQUEST['cancel_membership'] = false; // Do NOT cancel gateway subscription
 
                                         if (pmpro_changeMembershipLevel($custom_level, $morder->user_id, 'changed')) {
-                                            $morder->membership_id = $pmpro_level->id;
+                                            $morder->membership_id = $morder->membership_level->id;
                                             $morder->payment_transaction_id = $_REQUEST['trxref'];
                                             $morder->status = "success";
                                             $morder->saveOrder();
@@ -847,10 +927,10 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                     // echo "<pre>";
                                     // print_r($pmpro_level);
                                     $content = "<ul>
-                                        <li><strong>".__('Account', KKD_PAYSTACKPMP).":</strong> ".$current_user->display_name." (".$current_user->user_email.")</li>
-                                        <li><strong>".__('Order', KKD_PAYSTACKPMP).":</strong> ".$pmpro_invoice->code."</li>
-                                        <li><strong>".__('Membership Level', KKD_PAYSTACKPMP).":</strong> ".$pmpro_level->name."</li>
-                                        <li><strong>".__('Amount Paid', KKD_PAYSTACKPMP).":</strong> ".$pmpro_invoice->total." ".$pmpro_currency."</li>
+                                        <li><strong>".__('Account', 'paystack-gateway-paid-memberships-pro').":</strong> ".$current_user->display_name." (".$current_user->user_email.")</li>
+                                        <li><strong>".__('Order', 'paystack-gateway-paid-memberships-pro').":</strong> ".$pmpro_invoice->code."</li>
+                                        <li><strong>".__('Membership Level', 'paystack-gateway-paid-memberships-pro').":</strong> ".$pmpro_level->name."</li>
+                                        <li><strong>".__('Amount Paid', 'paystack-gateway-paid-memberships-pro').":</strong> ".$pmpro_invoice->total." ".$pmpro_currency."</li>
                                     </ul>";
                                     ob_start();
                                     if (file_exists(get_stylesheet_directory() . "/paid-memberships-pro/pages/confirmation.php")) {
@@ -908,11 +988,16 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         print_r("No records were found with user - ". $user_id." level - ". $level_to_cancel);
                     }
                 }
-                function cancel(&$order)
+                function cancel(&$order, $update_status = true )
                 {
-
+                    $backtrace = self::get_caller_info();
+                    $furtherbacktrace = wp_debug_backtrace_summary();
+                  
                     //no matter what happens below, we're going to cancel the order in our system
-                    $order->updateStatus("cancelled");
+                    if ( $update_status ) {
+                        $order->updateStatus( "cancelled" );
+                    }
+
                     $mode = pmpro_getOption("gateway_environment");
                     $code = $order->subscription_transaction_id;
                     if ($mode == 'sandbox') {
@@ -921,15 +1006,18 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                         $key = pmpro_getOption("paystack_lsk");
 
                     }
-                    if ($order->subscription_transaction_id != "") {
+
+                    if ( $code != "") {
                         $paystack_url = 'https://api.paystack.co/subscription/' . $code;
+                       
                         $headers = array(
                             'Authorization' => 'Bearer ' . $key
                         );
                         $args = array(
                             'headers' => $headers,
-                            'timeout' => 60
+                            'timeout' => 60,
                         );
+                        
                         $request = wp_remote_get($paystack_url, $args);
                         if (!is_wp_error($request) && 200 == wp_remote_retrieve_response_code($request)) {
                             $paystack_response = json_decode(wp_remote_retrieve_body($request));
@@ -943,34 +1031,195 @@ if (!function_exists('Paystack_Pmp_Gateway_load')) {
                                 $body = array(
                                     'code'  => $paystack_response->data->subscription_code,
                                     'token' => $paystack_response->data->email_token,
-
+                                    'debug_trace'=> $backtrace . " ". $furtherbacktrace
                                 );
                                 $args = array(
                                     'body'      => json_encode($body),
                                     'headers'   => $headers,
-                                    'timeout'   => 60
+                                    'timeout'   => 60,
                                 );
 
                                 $request = wp_remote_post($paystack_url, $args);
-                                // print_r($request);
-                                if (!is_wp_error($request)) {
-                                    $paystack_response = json_decode(wp_remote_retrieve_body($request));
+
+                                if ( ! is_wp_error( $request ) ) {
+                                    return true;
+                                } else {
+                                    return false; // There was an error cancelling for some reason.
                                 }
                             }
                         }
                     }
-                    global $wpdb;
-                    $wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
+                    return true;
                 }
-                function delete(&$order)
-                {
-                    //no matter what happens below, we're going to cancel the order in our system
-                    $order->updateStatus("cancelled");
-                    global $wpdb;
-                    $wpdb->query("DELETE FROM $wpdb->pmpro_membership_orders WHERE id = '" . $order->id . "'");
+
+                /// Used for updating subscription stuff.
+                public function update_subscription_info( $subscription ) {
+                        $subscription_id = $subscription->get_subscription_transaction_id();
+                        $backtrace = self::get_caller_info();
+                        $furtherbacktrace = wp_debug_backtrace_summary();
+
+                        $mode = pmpro_getOption("gateway_environment");
+                        if ( $mode == "sandbox" ) {
+                            $key = pmpro_getOption("paystack_tsk");
+                            
+                        } else {
+                            $key = pmpro_getOption("paystack_lsk");
+                        }
+
+                        $paystack_url = 'https://api.paystack.co/subscription/' . $subscription_id;
+                       
+                        $headers = array(
+                            'Authorization' => 'Bearer ' . $key
+                        );
+
+                        $args = array(
+                            'headers' => $headers,
+                            'timeout' => 60,
+                        );
+                        
+                        $request = wp_remote_get( $paystack_url, $args );
+
+                        // Request is okay, so let's get the data now and update what we need to.
+                        if ( ! is_wp_error( $request ) ) {
+                            $response = json_decode( wp_remote_retrieve_body( $request ) );
+
+                            if ( 200 !== wp_remote_retrieve_response_code( $request ) )  {
+                                // Throw an error here from the API
+                               return esc_html__( sprintf( 'Paystack error: %s', $response->message ), 'paystack-gateway-paid-memberships-pro' );
+                            }
+                            
+                            $update_array = array();
+                            $sub_info = $response->data;
+
+                            // The response status isn't active, so we're most likely already cancelled.
+                            if ( $sub_info->status !== 'active' ) {
+                                $update_array['status'] = 'cancelled'; // Does it 
+                            } else {
+                                $update_array['status'] = 'active';
+                            }
+                            
+
+                            // Let's make sure the cycle_numbers are correctly set based on the interval from Paystack.
+                            switch( $sub_info->plan->interval ) {
+                                case 'quarterly':
+                                    $update_array['cycle_number'] = 3;
+                                    break;
+                                case 'biannually':
+                                    $update_array['cycle_number'] = 6;
+                                    break;
+                            }
+
+                            // Update the subscription.
+                            $update_array['next_payment_date'] = sanitize_text_field( $sub_info->next_payment_date ); // [YYYY]-[MM]-[DD
+                            $update_array['startdate'] = sanitize_text_field( $sub_info->createdAt ); 
+                            $update_array['billing_amount'] = (float) $sub_info->amount/100; // Get currency value
+                            $update_array['cycle_period'] = $this->convert_interval_for_pmpro( $sub_info->plan->interval ); // Convert interval for PMPro format (which sanitizes it)
+                            $subscription->set( $update_array );
+                        } else {
+                            return esc_html__( 'There was an error communicating with Paystack. Please confirm your connectivity and API details and try again.', 'paystack-gateway-paid-memberships-pro' );
+                        }
+                }
+
+                /**
+                 * Undocumented function
+                 *
+                 * @param string $interval The pmpro paystack
+                 * @return string $interval The required interval for PayStack to recognize.
+                 */
+                function convert_interval_for_paystack( $interval ) {
+
+                    $interval = strtolower( $interval );
+
+                    switch( $interval ) {
+                        case 'day':
+                            $interval = 'daily';
+                            break;
+                        case 'week':
+                            $interval = 'weekly';
+                            break;
+                        case 'month':
+                            $interval = 'monthly';
+                            break;
+                        case 'year':
+                            $interval = 'annually';
+                            break;
+                        default:
+                            $interval = 'monthly';
+                    }
+
+                    return $interval;
+
+                }
+
+                /**
+                 * Convert Paystack's intervals for PMPro's format.
+                 *
+                 * @param string $interval The received Paystack interval (i.e. Weekly, Monthly etc )
+                 * @return string $interval The converted interval for PMPro.
+                 */
+                function convert_interval_for_pmpro( $interval ) {
+
+                    $interval = strtolower( $interval );
+
+                    switch( $interval ) {
+                        case 'daily':
+                            $interval = 'Day';
+                            break;
+                        case 'weekly':
+                            $interval = 'Week';
+                            break;
+                        case 'monthly':
+                            $interval = 'Month';
+                            break;
+                        case 'annually':
+                            $interval = 'Year';
+                            break;
+                        case 'quarterly':
+                            $interval = 'Month';
+                            break;
+                        case 'biannually':
+                            $interval = 'Month';
+                            break;
+                        default:
+                            $interval = 'Month';
+                    }
+
+                    return $interval;
+
+                }
+
+                function get_caller_info() {
+                    $c = '';
+                    $file = '';
+                    $func = '';
+                    $class = '';
+                    $trace = debug_backtrace();
+                    if (isset($trace[2])) {
+                        $file = $trace[1]['file'];
+                        $func = $trace[2]['function'];
+                        if ((substr($func, 0, 7) == 'include') || (substr($func, 0, 7) == 'require')) {
+                            $func = '';
+                        }
+                    } else if (isset($trace[1])) {
+                        $file = $trace[1]['file'];
+                        $func = '';
+                    }
+                    if (isset($trace[3]['class'])) {
+                        $class = $trace[3]['class'];
+                        $func = $trace[3]['function'];
+                        $file = $trace[2]['file'];
+                    } else if (isset($trace[2]['class'])) {
+                        $class = $trace[2]['class'];
+                        $func = $trace[2]['function'];
+                        $file = $trace[1]['file'];
+                    }
+                    if ($file != '') $file = basename($file);
+                    $c = $file . ": ";
+                    $c .= ($class != '') ? ":" . $class . "->" : "";
+                    $c .= ($func != '') ? $func . "(): " : "";
+                    return($c);
                 }
             }
         }
     }
 }
-?>
