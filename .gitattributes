@@ -1,0 +1,7 @@
+.gitattributes export-ignore
+.gitignore export-ignore
+.github export-ignore
+CONTRIBUTING.md export-ignore
+README.md export-ignore
+Dockerfile export-ignore
+pmpro-paystack-banner.jpg export-ignore
