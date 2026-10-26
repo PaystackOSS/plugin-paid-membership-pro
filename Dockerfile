@@ -9,7 +9,7 @@ ADD https://downloads.wordpress.org/plugin/paid-memberships-pro.latest-stable.zi
 RUN cd /dist && unzip paid-memberships-pro.latest-stable.zip && rm paid-memberships-pro.latest-stable.zip
 
 
-FROM wordpress:php7.2
+FROM wordpress:php8.3
 
 WORKDIR /var/www/html/
 
